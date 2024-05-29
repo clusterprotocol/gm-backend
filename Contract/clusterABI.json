@@ -1,0 +1,955 @@
+[
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "OwnableInvalidOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "OwnableUnauthorizedAccount",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "machineId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			}
+		],
+		"name": "MachineListed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "orderId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "machineId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "renter",
+				"type": "address"
+			}
+		],
+		"name": "MachineRented",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "enum GPURentalMarketplace.usdOrderType",
+				"name": "orderType",
+				"type": "uint8"
+			}
+		],
+		"name": "usdUpdate",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "userName",
+				"type": "string"
+			}
+		],
+		"name": "userRegistered",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "UIDtoAddress",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "bundleInfo",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_orderId",
+				"type": "uint256"
+			}
+		],
+		"name": "cancelOrder",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "idToFetch",
+				"type": "uint256"
+			}
+		],
+		"name": "checkAvailability",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_orderId",
+				"type": "uint256"
+			}
+		],
+		"name": "completeOrder",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "funds_handler",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "toFetch",
+				"type": "address"
+			}
+		],
+		"name": "getUserGPoints",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "hasTweeted",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_userAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_tokenAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_amount",
+				"type": "uint256"
+			}
+		],
+		"name": "isAllowedToSpend",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "codeToCheck",
+				"type": "uint256"
+			}
+		],
+		"name": "isReferCodeValid",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isRegistered",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isTokenAccepted",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "toFetch",
+				"type": "address"
+			}
+		],
+		"name": "isUserProvider",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_machineId",
+				"type": "uint256"
+			}
+		],
+		"name": "listMachineToggle",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "tokenAddress",
+				"type": "address"
+			}
+		],
+		"name": "loadBalance",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "machineId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "machineToOwner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "machines",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "cpuName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "gpuName",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "gpuVRAM",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "totalRAM",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "storageAvailable",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "coreCount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "IPAddress",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "region",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "bidPrice",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isListed",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "isRented",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "toFetch",
+				"type": "address"
+			}
+		],
+		"name": "machinesOwned",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "orderId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "orders",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "renter",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "machineId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "orderTimestamp",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "rentalDuration",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amountToHold",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isPending",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "refCodeToUser",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_cpuname",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_gpuname",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_spuVRam",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_totalRam",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_memorySize",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_coreCount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "_ipAddr",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "_openedPorts",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "string",
+				"name": "_region",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_bidprice",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "provider",
+				"type": "address"
+			}
+		],
+		"name": "registerMachines",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_organization",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "userAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_sshKey",
+				"type": "string"
+			}
+		],
+		"name": "registerUser",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_machineId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_rentalDuration",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_userId",
+				"type": "uint256"
+			}
+		],
+		"name": "rentMachine",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "serverPublicAddress",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newToken",
+				"type": "address"
+			}
+		],
+		"name": "setAcceptedTokens",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_machineId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_bidAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "setBidPrice",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newSerPub",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_newFundshandler",
+				"type": "address"
+			}
+		],
+		"name": "setKeys",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "stripeTxProcessed",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_organization",
+				"type": "string"
+			}
+		],
+		"name": "updateProfile",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "userIdCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "userNameStatus",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "users",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "UID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "organization",
+				"type": "string"
+			},
+			{
+				"internalType": "bool",
+				"name": "isProvider",
+				"type": "bool"
+			},
+			{
+				"internalType": "uint256",
+				"name": "usdBalance",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "sshPublicKey",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "tweetedUser",
+				"type": "address"
+			}
+		],
+		"name": "verifyTweet",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
