@@ -156,25 +156,6 @@
 		"inputs": [
 			{
 				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "bundleInfo",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
 				"name": "_orderId",
 				"type": "uint256"
 			}
@@ -233,16 +214,16 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "toFetch",
+				"name": "userToFetch",
 				"type": "address"
 			}
 		],
-		"name": "getUserGPoints",
+		"name": "getOrderReceived",
 		"outputs": [
 			{
-				"internalType": "uint256",
+				"internalType": "uint256[]",
 				"name": "",
-				"type": "uint256"
+				"type": "uint256[]"
 			}
 		],
 		"stateMutability": "view",
@@ -252,16 +233,73 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "",
+				"name": "userToFetch",
 				"type": "address"
 			}
 		],
-		"name": "hasTweeted",
+		"name": "getOrders",
 		"outputs": [
 			{
-				"internalType": "bool",
+				"internalType": "uint256[]",
 				"name": "",
-				"type": "bool"
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "userToFetch",
+				"type": "address"
+			}
+		],
+		"name": "getUsdAdds",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "userToFetch",
+				"type": "address"
+			}
+		],
+		"name": "getUsdSpends",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "toFetch",
+				"type": "address"
+			}
+		],
+		"name": "getUserBalnce",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -286,25 +324,6 @@
 			}
 		],
 		"name": "isAllowedToSpend",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "codeToCheck",
-				"type": "uint256"
-			}
-		],
-		"name": "isReferCodeValid",
 		"outputs": [
 			{
 				"internalType": "bool",
@@ -735,9 +754,9 @@
 				"type": "uint256"
 			},
 			{
-				"internalType": "uint256",
-				"name": "_userId",
-				"type": "uint256"
+				"internalType": "address",
+				"name": "_userAddress",
+				"type": "address"
 			}
 		],
 		"name": "rentMachine",
@@ -816,25 +835,6 @@
 	{
 		"inputs": [
 			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "stripeTxProcessed",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "address",
 				"name": "newOwner",
 				"type": "address"
@@ -855,6 +855,11 @@
 			{
 				"internalType": "string",
 				"name": "_organization",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_newSSH",
 				"type": "string"
 			}
 		],
@@ -937,19 +942,6 @@
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "tweetedUser",
-				"type": "address"
-			}
-		],
-		"name": "verifyTweet",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ]

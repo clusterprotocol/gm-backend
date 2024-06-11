@@ -27,7 +27,7 @@ contract GPURentalMarketplace is Ownable {
         string IPAddress;
         uint256[] portsOpen;
         string region;
-        uint256 bidPrice;  //in Gpoints
+        uint256 bidPrice; 
         bool isListed;
         bool isRented;
     }
@@ -43,6 +43,9 @@ contract GPURentalMarketplace is Ownable {
         string sshPublicKey;
         uint[] providedGpus;
         uint[] orderList;
+        uint[] orderReceived;
+        uint[] usdAdd;
+        uint[] usdSpend;
     }
 
     // Struct for Order details
@@ -68,9 +71,8 @@ contract GPURentalMarketplace is Ownable {
     uint public userIdCount = 100;
     uint public orderId = 0;
     uint internal refIDHandler = 100000;
-    uint gPerRefer = 5;
-    // address public USDC_ADDRESS = 0x6e54ebe8067bE3dc516D8a14bb40f4224b83FB46;
-    address public funds_handler = 0xcE408f35c3D43F5609151310309De73f3e57Ec76;
+    uint gPerRefer = 5;  
+    address public funds_handler;
 
     // Mappings
     mapping(uint256 => GPU) public machines;
@@ -81,9 +83,6 @@ contract GPURentalMarketplace is Ownable {
     mapping(string => bool) public userNameStatus;
     mapping (address => bool) public isRegistered;
     mapping (uint => address) public machineToOwner;
-    mapping (uint => uint) public bundleInfo;
-    mapping (string => bool) public stripeTxProcessed;
-    mapping (address => bool) public hasTweeted;
     mapping(address => bool) public isTokenAccepted;
    
     // Events
@@ -131,30 +130,23 @@ contract GPURentalMarketplace is Ownable {
         require(isValidUsername(_name), "Not a valid format");
         require(!isRegistered[userAddress], "Already Registered");
         require(!userNameStatus[_name], "Username Taken");
-        // require(referrerId >= 100000 && referrerId <= refIDHandler, "Invalid ref code");
         userIdCount++;
-        // refIDHandler++;
-        users[userAddress] = user(_name, userIdCount, _organization, false, 0, _sshKey, new uint256[](0),  new uint256[](0)  );
-        // refCodeToUser[refIDHandler] = userAddress;
-        // address refereeAdd = refCodeToUser[referrerId];
-        // users[refereeAdd].gPointsBalance += gPerRefer;
-        // users[refereeAdd].referredUsers.push(userAddress);
+        users[userAddress] = user(_name, userIdCount, _organization, false, 0, _sshKey, new uint256[](0),  new uint256[](0), new uint256[](0),new uint256[](0),new uint256[](0)  );
         userNameStatus[_name] = true;
         isRegistered[userAddress] = true;
         UIDtoAddress[userIdCount] = userAddress;
         emit userRegistered(userAddress, _name);
-        // emit gPointsUpdate(refereeAdd, gPerRefer, gPointsOrderType.ReferRewards);
-        // emit gPointsUpdate(userAddress, gPerRefer, gPointsOrderType.ReferRewards);
         return userIdCount;
     }
 
-    function updateProfile(string memory _name, string memory _organization) public {
+    function updateProfile(string memory _name, string memory _organization, string memory _newSSH) public {
         require(isRegistered[msg.sender]);
         require(!userNameStatus[_name]);
         require(isValidUsername(_name));
         require(bytes(_name).length>4);
         users[msg.sender].name = _name;
         users[msg.sender].organization = _organization;
+        users[msg.sender].sshPublicKey = _newSSH;
     }
 
     // Register a new machine/GPU
@@ -176,21 +168,21 @@ contract GPURentalMarketplace is Ownable {
     }
 
     // Rent a machine/GPU
-    function rentMachine(uint256 _machineId, uint256 _rentalDuration, uint256 _userId) public onlyFromServer returns(uint) {
-        require(isRegistered[UIDtoAddress[_userId]], "Renter is not registered yet");
+    function rentMachine(uint256 _machineId, uint256 _rentalDuration, address _userAddress) public onlyFromServer returns(uint) {
+        require(isRegistered[_userAddress], "Renter is not registered yet");
         require( machines[_machineId].isListed, "Machine is not available for rent");
         require(!machines[_machineId].isRented, "Machine already in use");
         require(_rentalDuration > 0, "Rental duration should be greater than 0");
-        require(users[UIDtoAddress[_userId]].usdBalance >= machines[_machineId].bidPrice * _rentalDuration, "Not enough Gpoints");
+        require(users[_userAddress].usdBalance >= machines[_machineId].bidPrice * _rentalDuration, "Not enough Gpoints");
         orderId++;
         uint amountToDeduct = machines[_machineId].bidPrice * _rentalDuration;
-        users[UIDtoAddress[_userId]].usdBalance -=  amountToDeduct;
-        orders[orderId] = Order(UIDtoAddress[_userId], _machineId, block.timestamp, _rentalDuration, amountToDeduct, true);
+        users[_userAddress].usdBalance -=  amountToDeduct;
+        orders[orderId] = Order(_userAddress, _machineId, block.timestamp, _rentalDuration, amountToDeduct, true);
         machines[_machineId].isListed = false;
         machines[_machineId].isRented =  true;
-        users[UIDtoAddress[_userId]].orderList.push(orderId);
-        users[machineToOwner[_machineId]].orderList.push(orderId);
-        emit MachineRented(orderId, _machineId, UIDtoAddress[_userId]);
+        users[_userAddress].orderList.push(orderId);
+        users[machineToOwner[_machineId]].orderReceived.push(orderId);
+        emit MachineRented(orderId, _machineId, _userAddress);
         return orderId;
     }
 
@@ -201,6 +193,8 @@ contract GPURentalMarketplace is Ownable {
         require(orders[_orderId].isPending, "Order fulfilled already");
         orders[_orderId].isPending = false;
         users[machineToOwner[orders[_orderId].machineId]].usdBalance += orders[_orderId].amountToHold;
+        users[machineToOwner[orders[_orderId].machineId]].usdAdd.push(orders[_orderId].amountToHold);
+        users[orders[_orderId].renter].usdSpend.push(orders[_orderId].amountToHold);
         machines[orders[_orderId].machineId].isListed = true;
         machines[orders[_orderId].machineId].isRented = false;
         emit usdUpdate(machineToOwner[orders[_orderId].machineId], orders[_orderId].amountToHold, usdOrderType.Earn);
@@ -225,13 +219,6 @@ contract GPURentalMarketplace is Ownable {
         machines[_machineId].isListed = !machines[_machineId].isListed;
     }
 
-    // function setReferRewards (uint newAmount) public onlyOwner {
-    //     gPerRefer = newAmount;
-    // }
-
-    // function setBundleInfo(uint _amount, uint _gPoints) public onlyOwner {
-    //     bundleInfo[_amount] = _gPoints;
-    // }
 
     function loadBalance(uint amount, address tokenAddress) public {
         require(isTokenAccepted[tokenAddress], "Token address invalid");
@@ -242,7 +229,8 @@ contract GPURentalMarketplace is Ownable {
        
         // Transfer stable coins from user to this contract
         require(IERC20(tokenAddress).transferFrom(msg.sender, funds_handler, amountInDecimals), "USDC transfer failed");
-        users[msg.sender].usdBalance += amount * 10**6;
+        users[msg.sender].usdBalance += amountInDecimals;
+        users[msg.sender].usdAdd.push(amountInDecimals);
         emit usdUpdate( msg.sender , amount, usdOrderType.Buy);
     }
 
@@ -250,29 +238,14 @@ contract GPURentalMarketplace is Ownable {
         return IERC20(_tokenAddress).allowance(_userAddress, address(this)) >= _amount;
     }
 
-    // function gPBuyWithStripe(string memory txId, uint gPToCredit, uint userId) public onlyFromServer {
-    //     require(isRegistered[UIDtoAddress[userId]], "Invalid user");
-    //     require(!stripeTxProcessed[txId], "Order already processed");
-    //     users[UIDtoAddress[userId]].usdBalance += gPToCredit;
-    //     stripeTxProcessed[txId] = true;
-    //     emit usdUpdate(UIDtoAddress[userId], gPToCredit, usdOrderType.Buy);
-    // }
 
     function  setBidPrice(uint _machineId, uint _bidAmount) public {
         require(msg.sender == machineToOwner[_machineId] || msg.sender == serverPublicAddress);
         machines[_machineId].bidPrice = _bidAmount *10**6;
     }
 
-    function verifyTweet(address tweetedUser) public onlyFromServer {
-        require(isRegistered[tweetedUser], "Invalid user");
-        require(!hasTweeted[tweetedUser], "Already verified");
-        users[tweetedUser].usdBalance += 5;
-        hasTweeted[tweetedUser] = true;
-        emit usdUpdate(tweetedUser, 5, usdOrderType.Earn);
-    }
-
     //viewfunctions
-    function getUserGPoints(address toFetch) public view returns(uint) {
+    function getUserBalnce(address toFetch) public view returns(uint) {
         return users[toFetch].usdBalance;
     }
 
@@ -288,7 +261,21 @@ contract GPURentalMarketplace is Ownable {
         return machines[idToFetch].isListed;
     }
 
-    function isReferCodeValid (uint codeToCheck) public view returns (bool) {
-        return codeToCheck > 100000 && codeToCheck <= refIDHandler;
+    function getUsdAdds(address userToFetch) public view returns(uint[] memory) {
+        return users[userToFetch].usdAdd;
     }
+
+    function getUsdSpends(address userToFetch) public view returns(uint[] memory) {
+        return users[userToFetch].usdSpend;
+    }
+
+    function getOrders(address userToFetch) public view returns(uint[] memory) {
+        return users[userToFetch].orderList;
+    }
+
+    function getOrderReceived(address userToFetch) public view returns(uint[] memory) {
+        return users[userToFetch].orderReceived;
+    }
+
+
 }

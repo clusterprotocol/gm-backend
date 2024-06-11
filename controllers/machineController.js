@@ -3,6 +3,7 @@ const {clusterContractInstance} = require('../Contract/contract.js')
 const {clusterContract, provider} = clusterContractInstance()
 
 const RegisterMachine = require("../models/registerMachine.js");
+const Order = require('../models/order.js')
 
 const register = async(req,res) => {
 
@@ -25,6 +26,7 @@ const register = async(req,res) => {
       }
       
       const gasPrice = await provider.getFeeData()
+    //   const estimatedGas = ethers.estimateGas(clusterContract.registerMachines)
 
       const tx = await clusterContract.registerMachines(
         machineData.cpuname,
@@ -136,7 +138,88 @@ const available = async(req,res) => {
 
 }
 
+const rent = async(req,res) => {
+
+    try {
+        // Extract required information from the request body
+        const machineId = req.body.machineId;
+        const rentalDuration = req.body.rentalDuration;
+        const userAddress = req.body.userAddress;
+
+        
+                
+        if (!userAddress || !rentalDuration || !machineId) {
+          return res.status(400).json({ error: "Not all the required details are provided." });
+        }
+      
+        const gasPrice = await provider.getGasPrice();
+        const gasLimit = await clusterContract.estimateGas.rentMachine(
+          machineId,
+          rentalDuration,
+          userAddress
+        );
+        // Call the rentMachine function in smart contract and get the orderId
+        const order = await clusterContract.rentMachine(
+          machineId,
+          rentalDuration,
+          userAddress,
+          {
+            gasLimit,
+            gasPrice,
+          }
+        );
+
+        await order.wait();
+
+        const orderId = await clusterContract.orderId()
+        // const currentTime = Math.floor(Date.now() / 1000);
+        
+
+        const orderInfo = await clusterContract.orders(orderId)
+        const revokeTime = orderInfo.orderTimestamp + rentalDuration * 3600
+        console.log(revokeTime)
+        const uidToAddress = await clusterContract.UIDtoAddress(userId);
+        const renterInfo =  await clusterContract.users(uidToAddress)
+
+        // const machineToOwner = await clusterContract.machineToOwner(machineId)
+        const ipAddress = await clusterContract.machines(machineId).IPAddress;
+        const linkToSsh = "http://" + ipAddress + ":8080/init_ssh";
+        const username = await clusterContract.users(userAddress).username;
+        const userSsh = await clusterContract.users(userAddress).sshPublicKey;
+        const dataToSend = {
+            "aws_access_key_id": "AKIAWFZYM2JEAPDRUZ2D",
+            "aws_secret_access_key": "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",
+            "aws_region": "ap-south-1",
+            "ecr_repo": "424783172168.dkr.ecr.ap-south-1.amazonaws.com",
+            "order_duration": rentalDuration,
+            "order_id": orderId,
+            "docker_image": "ubuntu",
+            "username": username,
+            "public_key": userSsh
+        }
+
+        const initSSHResponse = await axios.post(linkToSsh, dataToSend);
+          
+
+
+        // Respond with the orderId and the response from the SSH initialization endpoint
+        res.json({
+          success: true,
+          message: "Machine rented successfully",
+          orderId: parseInt(orderId),
+          containerResponse: initSSHResponse
+        });
+    
+      } catch (error) {
+        console.error("Error renting a machine:", error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+      }
+
+
+}
+
 module.exports = {
     register,
-    available
+    available,
+    rent
 }
