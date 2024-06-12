@@ -7,13 +7,11 @@ const userRegister = require('../models/userRegister.js')
 
 const isUser = async(req,res) => {
 
-    const walletAddress = req.body.walletAddress;
-    const userBool = await clusterContract.isRegistered(walletAddress);
-
+    const userAddress = req.body.userAddress;
+    const userBool = await clusterContract.isRegistered(userAddress);
     return res.json({
         userBool: userBool,
     })
-
 }
 
 const register = async(req,res) => {
@@ -84,7 +82,94 @@ const register = async(req,res) => {
 
 }
 
+const getUsdBalance = async(req, res) => {
+    try{
+        const usdBal = parseInt(await clusterContract.getUserBalnce(req.body.userAddress)) * (10**-6);
+        res.json({
+            success: true,
+            usdBalance: usdBal
+        })
+
+    }
+    catch (e) {
+        res.status(500).json({
+            success: false,
+            message: e.message
+        })
+    }
+}
+
+const getUsdAdds = async(req, res) => {
+    try{
+        const usdAdds = await clusterContract.getUsdAdds(req.body.userAddress);
+        const parsedUsd = []
+        for(i=0;i<usdAdds.length;i++) {
+            parsedUsd[i] = parseInt(usdAdds[i])* 10**-6;
+        }
+
+        res.json({
+            success: true,
+            usdAdds: parsedUsd
+        })
+
+    }
+    catch (e) {
+        res.status(500).json({
+            success: false,
+            message: e.message
+        })
+    }
+}
+
+const getUsdSpends = async(req, res) => {
+    try{
+        const usdSpends = await clusterContract.getUsdSpends(req.body.userAddress);
+        const parsedUsd = []
+        for(i=0;i<usdSpends.length;i++) {
+            parsedUsd[i] = parseInt(usdSpends[i])* 10**-6;
+        }
+
+        res.json({
+            success: true,
+            usdSpends: parsedUsd
+        })
+
+    }
+    catch (e) {
+        res.status(500).json({
+            success: false,
+            message: e.message
+        })
+    }
+}
+
+const getOrders = async(req, res) => {
+    try{
+        const orders = await clusterContract.getOrders(req.body.userAddress);
+        const parsedOrders = []
+        for(i=0;i<orders.length;i++) {
+            parsedOrders[i] = parseInt(orders[i]);
+        }
+
+        res.json({
+            success: true,
+            usdSpends: parsedOrders
+        })
+
+    }
+    catch (e) {
+        res.status(500).json({
+            success: false,
+            message: e.message
+        })
+    }
+}
+
 module.exports = {
     isUser,
-    register
+    register,
+    getUsdBalance,
+    getUsdAdds,
+    getUsdSpends,
+    getOrders 
 }

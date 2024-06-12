@@ -172,20 +172,17 @@ const rent = async(req,res) => {
         await order.wait();
 
         const orderId = await clusterContract.orderId()
-        // const currentTime = Math.floor(Date.now() / 1000);
+        
         
 
         const orderInfo = await clusterContract.orders(orderId)
         const revokeTime = orderInfo.orderTimestamp + rentalDuration * 3600
-        console.log(revokeTime)
-        const uidToAddress = await clusterContract.UIDtoAddress(userId);
-        const renterInfo =  await clusterContract.users(uidToAddress)
-
-        // const machineToOwner = await clusterContract.machineToOwner(machineId)
-        const ipAddress = await clusterContract.machines(machineId).IPAddress;
-        const linkToSsh = "http://" + ipAddress + ":8080/init_ssh";
+        const machineDetails = await clusterContract.machines(machineId);
+        const ipAddress = machineDetails.IPAddress;
+        const linkToSsh = "http://" + ipAddress + ":6666/init_ssh";
         const username = await clusterContract.users(userAddress).username;
-        const userSsh = await clusterContract.users(userAddress).sshPublicKey;
+        const userDetails = await clusterContract.users(userAddress);
+        const userSsh = userDetails.sshPublicKey;
         const dataToSend = {
             "aws_access_key_id": "AKIAWFZYM2JEAPDRUZ2D",
             "aws_secret_access_key": "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",
@@ -199,15 +196,16 @@ const rent = async(req,res) => {
         }
 
         const initSSHResponse = await axios.post(linkToSsh, dataToSend);
-          
-
-
+        const host_port = initSSHResponse.data[0].host_port;
+        const sshCommand = "ssh -i yourfile.pem -p" + host_port + " clusterprotocol@" + ipAddress;
+        console.log(sshCommand)
         // Respond with the orderId and the response from the SSH initialization endpoint
         res.json({
           success: true,
           message: "Machine rented successfully",
           orderId: parseInt(orderId),
-          containerResponse: initSSHResponse
+          host_port: host_port,
+          sshCommand: sshCommand
         });
     
       } catch (error) {
@@ -217,6 +215,7 @@ const rent = async(req,res) => {
 
 
 }
+
 
 module.exports = {
     register,
