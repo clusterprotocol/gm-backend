@@ -8,5 +8,6 @@ userRouter.route('/getUsdBalance').get(userController.getUsdBalance);
 userRouter.route('/getUsdAdds').get(userController.getUsdAdds);
 userRouter.route('/getUsdSpends').get(userController.getUsdSpends);
 userRouter.route('/getOrders').get(userController.getOrders);
-
+userRouter.route('/userNameStatus').get(userController.userNameStatus);
+userRouter.route('/getUsername').get(userController.getUsername);
 module.exports = userRouter

@@ -14,6 +14,25 @@ const isUser = async(req,res) => {
     })
 }
 
+const userNameStatus = async(req,res) => {
+
+    const username = req.body.userName;
+    const usernameBool = await clusterContract.userNameStatus(username);
+    return res.json({
+        isTaken: usernameBool
+    })
+}
+
+const getUsername = async(req,res) => {
+
+    const userAddress = req.body.userAddress;
+    const user = await clusterContract.users(userAddress);
+    const username = user.name;
+    return res.json({
+        username: username,
+    })
+}
+
 const register = async(req,res) => {
 
     try {
@@ -171,5 +190,7 @@ module.exports = {
     getUsdBalance,
     getUsdAdds,
     getUsdSpends,
-    getOrders 
+    getOrders,
+    userNameStatus,
+    getUsername 
 }
