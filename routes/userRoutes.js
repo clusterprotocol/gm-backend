@@ -2,12 +2,12 @@ const express = require("express");
 const userController = require("../controllers/userController.js")
 const userRouter = express.Router();
 
-userRouter.route('/isUser').get(userController.isUser);
+userRouter.route('/isUser').post(userController.isUser);
 userRouter.route('/register').post(userController.register);
-userRouter.route('/getUsdBalance').get(userController.getUsdBalance);
-userRouter.route('/getUsdAdds').get(userController.getUsdAdds);
-userRouter.route('/getUsdSpends').get(userController.getUsdSpends);
-userRouter.route('/getOrders').get(userController.getOrders);
-userRouter.route('/userNameStatus').get(userController.userNameStatus);
-userRouter.route('/getUsername').get(userController.getUsername);
+userRouter.route('/getUsdBalance').post(userController.getUsdBalance);
+userRouter.route('/getUsdAdds').post(userController.getUsdAdds);
+userRouter.route('/getUsdSpends').post(userController.getUsdSpends);
+userRouter.route('/getOrders').post(userController.getOrders);
+userRouter.route('/userNameStatus').post(userController.userNameStatus);
+userRouter.route('/getUsername').post(userController.getUsername);
 module.exports = userRouter
