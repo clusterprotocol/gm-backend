@@ -197,7 +197,7 @@ const rent = async(req,res) => {
 
         const initSSHResponse = await axios.post(linkToSsh, dataToSend);
         const host_port = initSSHResponse.data[0].host_port;
-        const sshCommand = "ssh -i yourfile.pem -p" + host_port + " clusterprotocol@" + ipAddress;
+        const sshCommand = "ssh -i yourfile.pem -p" + host_port +  username + ipAddress;
         console.log(sshCommand)
         // Respond with the orderId and the response from the SSH initialization endpoint
         res.json({
@@ -216,9 +216,32 @@ const rent = async(req,res) => {
 
 }
 
+const getOrderDetails = async(req, res) => {
+    try{
+        const orderId = req.body.orderId;
+        const orderInfo = await clusterContract.orders(orderId);
+        const renter =  orderInfo.renter;
+        const orderEndTime = orderInfo.orderTimestamp + orderInfo.rentalDuration * 3600;
+        const amountPaid = parseInt(orderInfo.amountToHold) * 10**-6;
+        const orderStatus = orderInfo.isPending;
+        res.json({
+            renter: renter,
+            orderEndTime: orderEndTime,
+            amountPaid: amountPaid,
+            orderStatus: orderStatus
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        })
+    }
+}
+
 
 module.exports = {
     register,
     available,
-    rent
+    rent,
+    getOrderDetails
 }

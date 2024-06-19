@@ -172,7 +172,7 @@ const getOrders = async(req, res) => {
 
         res.json({
             success: true,
-            usdSpends: parsedOrders
+            userOrders: parsedOrders
         })
 
     }
