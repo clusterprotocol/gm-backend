@@ -224,11 +224,13 @@ const getOrderDetails = async(req, res) => {
         const orderEndTime = orderInfo.orderTimestamp + orderInfo.rentalDuration * 3600;
         const amountPaid = parseInt(orderInfo.amountToHold) * 10**-6;
         const orderStatus = orderInfo.isPending;
+        const machineId = parseInt(orderInfo.machineId);
         res.json({
             renter: renter,
             orderEndTime: orderEndTime,
             amountPaid: amountPaid,
-            orderStatus: orderStatus
+            orderStatus: orderStatus,
+            machineId: machineId
         })
     } catch (error) {
         res.status(500).json({
