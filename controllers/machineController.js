@@ -197,23 +197,46 @@ const rent = async(req,res) => {
 
         const initSSHResponse = await axios.post(linkToSsh, dataToSend);
         const host_port = initSSHResponse.data[0].host_port;
-        const sshCommand = "ssh -i yourfile.pem -p" + host_port +  username + ipAddress;
+        const sshCommand = "ssh -i yourfile.pem -p "  +host_port + " " + username + "@" + ipAddress;
         console.log(sshCommand)
+        const newOrder = new Order({
+            orderId: parseInt(orderId),
+            machineId: machineId,
+            renterId: userAddress,
+            hoursRented: rentalDuration,
+            connectionCommand: sshCommand,
+            startTime: orderInfo.orderTimestamp,
+            revokeTime: revokeTime
+        })
+
+        await newOrder.save();
+
         // Respond with the orderId and the response from the SSH initialization endpoint
         res.json({
           success: true,
           message: "Machine rented successfully",
           orderId: parseInt(orderId),
-          host_port: host_port,
+          host_port: 2300,
           sshCommand: sshCommand
         });
     
       } catch (error) {
-        console.error("Error renting a machine:", error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+        res.status(500).json({ success: false, message: error.message });
       }
+}
 
-
+const cancelOrder = async(req,res) => {
+    try{
+        const orderId = req.body.orderId;
+        const cancelOrder = await clusterContract.cancelOrder(orderId);
+        await cancelOrder.wait();
+        res.json({
+            success: true,
+            status: "Cancelled successfully"
+        })
+    } catch(error) {
+        res.status(500).json({success: false, message: error.message})
+    }
 }
 
 const getOrderDetails = async(req, res) => {
@@ -225,12 +248,21 @@ const getOrderDetails = async(req, res) => {
         const amountPaid = parseInt(orderInfo.amountToHold) * 10**-6;
         const orderStatus = orderInfo.isPending;
         const machineId = parseInt(orderInfo.machineId);
+        const order = await Order.findOne({ orderId: parseInt(orderId) });
+
+        if (!order) {
+        return res.status(404).json({
+            success: false,
+            message: "Order not found"
+        });
+        }
         res.json({
             renter: renter,
             orderEndTime: orderEndTime,
             amountPaid: amountPaid,
             orderStatus: orderStatus,
-            machineId: machineId
+            machineId: machineId,
+            sshCommand: order.connectionCommand
         })
     } catch (error) {
         res.status(500).json({
@@ -245,5 +277,6 @@ module.exports = {
     register,
     available,
     rent,
-    getOrderDetails
+    getOrderDetails,
+    cancelOrder
 }
