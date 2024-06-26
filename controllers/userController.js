@@ -165,14 +165,22 @@ const getUsdSpends = async(req, res) => {
 const getOrders = async(req, res) => {
     try{
         const orders = await clusterContract.getOrders(req.body.userAddress);
-        const parsedOrders = []
+        const activeOrders = [];
+        const pastOrders = [];
         for(i=0;i<orders.length;i++) {
-            parsedOrders[i] = parseInt(orders[i]);
+            const orderStatus = await clusterContract.orders(orders[i]).isPending;
+            if(orderStatus) {
+                activeOrders.push(parseInt(orders[i]));
+            }
+            else {
+                pastOrders.push(parseInt(orders[i]));
+            }
         }
 
         res.json({
             success: true,
-            userOrders: parsedOrders
+            activeOrders: activeOrders,
+            pastOrders: pastOrders
         })
 
     }

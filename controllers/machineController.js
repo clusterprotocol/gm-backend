@@ -171,8 +171,8 @@ const rent = async(req,res) => {
 
         await order.wait();
 
-        const orderId = await clusterContract.orderId()
-        
+        const orderId = parseInt(await clusterContract.orderId())
+        console.log(orderId)
         
 
         const orderInfo = await clusterContract.orders(orderId)
@@ -180,9 +180,9 @@ const rent = async(req,res) => {
         const machineDetails = await clusterContract.machines(machineId);
         const ipAddress = machineDetails.IPAddress;
         const linkToSsh = "http://" + ipAddress + ":6666/init_ssh";
-        const username = await clusterContract.users(userAddress).username;
         const userDetails = await clusterContract.users(userAddress);
         const userSsh = userDetails.sshPublicKey;
+        const username = userDetails.name;
         const dataToSend = {
             "aws_access_key_id": "AKIAWFZYM2JEAPDRUZ2D",
             "aws_secret_access_key": "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",
@@ -196,8 +196,10 @@ const rent = async(req,res) => {
         }
 
         const initSSHResponse = await axios.post(linkToSsh, dataToSend);
-        const host_port = initSSHResponse.data[0].host_port;
-        const sshCommand = "ssh -i yourfile.pem -p "  +host_port + " " + username + "@" + ipAddress;
+        console.log(initSSHResponse);
+        const host_port = initSSHResponse.data.containers[0].host_port;
+
+        const sshCommand = "ssh -i yourfile.pem -p"  +host_port + " " + username  + "@" + ipAddress;
         console.log(sshCommand)
         const newOrder = new Order({
             orderId: parseInt(orderId),
@@ -239,16 +241,45 @@ const cancelOrder = async(req,res) => {
     }
 }
 
+const getMachineDetails = async(req, res) => {
+    try{
+        const machineId = req.body.machineId;
+        const machineDetails = await clusterContract.machines(machineId);
+        const formattedMachineDetails = {
+            cpuName: machineDetails.cpuName,
+            gpuName: machineDetails.gpuName,
+            gpuVRAM: parseInt(machineDetails.gpuVRAM),
+            totalRAM: parseInt(machineDetails.totalRAM),
+            storageAvailable: parseInt(machineDetails.storageAvailable),
+            coreCount: parseInt(machineDetails.coreCount),
+            IPAddress: machineDetails.IPAddress,
+            region: machineDetails.region,
+            bidPrice: parseInt(machineDetails.bidPrice),
+            isListed: machineDetails.isListed,
+            isRented: machineDetails.isRented
+        };
+        res.json({
+            success: true,
+            machineDetails: formattedMachineDetails
+        })
+    }
+    catch(error) {
+        res.status(500).json({success: false, message: error.message})
+    }
+}
+
 const getOrderDetails = async(req, res) => {
     try{
         const orderId = req.body.orderId;
         const orderInfo = await clusterContract.orders(orderId);
         const renter =  orderInfo.renter;
-        const orderEndTime = orderInfo.orderTimestamp + orderInfo.rentalDuration * 3600;
+        const orderStartTime = parseInt(orderInfo.orderTimestamp);
+        const orderEndTime = orderStartTime + orderInfo.rentalDuration * 3600;
         const amountPaid = parseInt(orderInfo.amountToHold) * 10**-6;
         const orderStatus = orderInfo.isPending;
         const machineId = parseInt(orderInfo.machineId);
         const order = await Order.findOne({ orderId: parseInt(orderId) });
+        const isPending = orderInfo.isPending;
 
         if (!order) {
         return res.status(404).json({
@@ -258,11 +289,13 @@ const getOrderDetails = async(req, res) => {
         }
         res.json({
             renter: renter,
+            orderStartTime: orderStartTime,
             orderEndTime: orderEndTime,
             amountPaid: amountPaid,
             orderStatus: orderStatus,
             machineId: machineId,
-            sshCommand: order.connectionCommand
+            sshCommand: order.connectionCommand,
+            isPending: isPending
         })
     } catch (error) {
         res.status(500).json({
@@ -278,5 +311,6 @@ module.exports = {
     available,
     rent,
     getOrderDetails,
-    cancelOrder
+    cancelOrder,
+    getMachineDetails
 }

@@ -1,14 +1,18 @@
 const { Router: expressRouter } = require("express");
 const router = expressRouter();
 
-// const infoRouter = require("./infoRoutes");
 const machineRouter = require("./machineRoutes");
 const userRouter = require("./userRoutes");
-// const otherRouter = require('./otherRoutes')
+const apiKeyRouter = require("./apiKeyRoutes");
+const apiKeyMiddleware = require("../middleware/apiKeyMiddleWare.js");
 
-// router.use("/info", infoRouter);
+// Public routes
+router.use("/keys", apiKeyRouter);
+
+// Protected routes
+router.use(apiKeyMiddleware);
 router.use("/machine", machineRouter);
 router.use("/user", userRouter);
-// router.use("/other", otherRouter);
+
 
 module.exports = router;
