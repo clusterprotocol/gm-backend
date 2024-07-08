@@ -218,7 +218,7 @@ const rent = async(req,res) => {
           success: true,
           message: "Machine rented successfully",
           orderId: parseInt(orderId),
-          host_port: 2300,
+          host_port: host_port,
           sshCommand: sshCommand
         });
     
