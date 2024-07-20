@@ -25,8 +25,23 @@ const register = async(req,res) => {
           .json({ error: "Not a registered user." });
       }
       
-      const gasPrice = await provider.getFeeData()
-    //   const estimatedGas = ethers.estimateGas(clusterContract.registerMachines)
+      const feeData = await provider.getFeeData();
+      // const maxFeePerGas = feeData.maxFeePerGas;
+      // const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      // const gasLimit = await clusterContract.estimateGas.registerMachines(
+      //   machineData.cpuname,
+      //   machineData.gpuname,
+      //   machineData.spuVRam,
+      //   machineData.totalRam,
+      //   machineData.memorySize,
+      //   machineData.coreCount,
+      //   machineData.ipAddr,
+      //   machineData.openedPorts,
+      //   machineData.region,
+      //   machineData.bidprice,
+      //   machineData.walletAddress
+      // )
+
 
       const tx = await clusterContract.registerMachines(
         machineData.cpuname,
@@ -41,7 +56,7 @@ const register = async(req,res) => {
         machineData.bidprice,
         machineData.walletAddress,
         {
-          gasPrice: gasPrice.maxFeePerGas,
+          gasPrice: feeData.gasPrice
         }
       );
   
@@ -184,10 +199,10 @@ const rent = async(req,res) => {
         const userSsh = userDetails.sshPublicKey;
         const username = userDetails.name;
         const dataToSend = {
-            "aws_access_key_id": "AKIAWFZYM2JEAPDRUZ2D",
-            "aws_secret_access_key": "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",
-            "aws_region": "ap-south-1",
-            "ecr_repo": "424783172168.dkr.ecr.ap-south-1.amazonaws.com",
+            "aws_access_key_id": process.env.AWS_ACCESS_KEY_ID,
+            "aws_secret_access_key": process.env.AWS_SECRET_ACCESS_KEY,
+            "aws_region": process.env.AWS_REGION,
+            "ecr_repo": process.env.ERC_REPO,
             "order_duration": rentalDuration,
             "order_id": orderId,
             "docker_image": "ubuntu",
