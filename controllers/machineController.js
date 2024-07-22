@@ -202,7 +202,7 @@ const rent = async(req,res) => {
             "aws_access_key_id": process.env.AWS_ACCESS_KEY_ID,
             "aws_secret_access_key": process.env.AWS_SECRET_ACCESS_KEY,
             "aws_region": process.env.AWS_REGION,
-            "ecr_repo": process.env.ERC_REPO,
+            "ecr_repo": process.env.ECR_REPO,
             "order_duration": rentalDuration,
             "order_id": orderId,
             "docker_image": "ubuntu",
@@ -213,6 +213,9 @@ const rent = async(req,res) => {
         const initSSHResponse = await axios.post(linkToSsh, dataToSend);
         console.log(initSSHResponse);
         const host_port = initSSHResponse.data.containers[0].host_port;
+        const container_Id = initSSHResponse.data.containers[0].container_id;
+        console.log(host_port);
+        console.log(container_Id);
 
         const sshCommand = "ssh -i yourfile.pem -p"  +host_port + " " + username  + "@" + ipAddress;
         console.log(sshCommand)
@@ -222,6 +225,7 @@ const rent = async(req,res) => {
             renterId: userAddress,
             hoursRented: rentalDuration,
             connectionCommand: sshCommand,
+            container_Id: container_Id,
             startTime: orderInfo.orderTimestamp,
             revokeTime: revokeTime
         })
@@ -240,6 +244,37 @@ const rent = async(req,res) => {
       } catch (error) {
         res.status(500).json({ success: false, message: error.message });
       }
+}
+
+const getBandwidth = async(req,res) => {
+  try{
+    const orderId = req.body.orderId;
+
+    const order = await Order.findOne({ orderId: orderId });
+    const container_id = order.container_Id;
+    
+    const machineId = order.machineId;
+    const machineDetails = await clusterContract.machines(machineId);
+    const ipAddress = machineDetails.IPAddress;
+    const linkToSsh = `http://${ipAddress}:6666/bandwidth`;
+    
+    // Make the GET request with query parameters
+    const response = await axios({
+      method: 'get',
+      url: linkToSsh,
+      data: { container_id }
+    });
+    
+    const bandwidth = response.data;
+    res.json({
+      download: bandwidth.download,
+      upload: bandwidth.upload,
+      ping: bandwidth.ping
+    })
+  }
+  catch (error){
+    res.status(500).json({ success: false, message: error.message });
+  }
 }
 
 const cancelOrder = async(req,res) => {
@@ -327,5 +362,6 @@ module.exports = {
     rent,
     getOrderDetails,
     cancelOrder,
-    getMachineDetails
+    getMachineDetails,
+    getBandwidth
 }

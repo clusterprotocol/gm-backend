@@ -6,6 +6,7 @@ const orderSchema = new mongoose.Schema({
     renterId: String,
     hoursRented: Number,
     connectionCommand: String,
+    container_Id: String,
     startTime: Number,
     revokeTime: { type: Number, default: 0 },
     isCompleted: { type: Boolean, default: false }
