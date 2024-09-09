@@ -12,6 +12,15 @@ apiRouter.post('/generate', async (req, res) => {
             return res.status(400).json({ message: 'User address is required' });
         }
 
+        // Check if the userAddress already exists in the database
+        const existingKey = await ApiKey.findOne({ userAddress });
+
+        if (existingKey) {
+            // If the userAddress already exists, return the existing API key
+            return res.json({ apiKey: existingKey.key });
+        }
+
+        // If the userAddress does not exist, generate a new API key
         const apiKey = crypto.randomBytes(32).toString('hex');
         const newApiKey = new ApiKey({ key: apiKey, userAddress });
 
