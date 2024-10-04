@@ -1,9 +1,24 @@
 const axios = require("axios");
 const {clusterContractInstance} = require('../Contract/contract.js')
 const {clusterContract, provider} = clusterContractInstance()
-
+const spheronABI = require('../Contract/ProviderRegistry.json')
 const RegisterMachine = require("../models/registerMachine.js");
 const Order = require('../models/order.js')
+const {Web3} = require('web3');
+const { ethers, JsonRpcProvider } = require("ethers");
+
+const web3 = new Web3('https://spheron-devnet-eth.rpc.caldera.xyz/http');  // Correct instantiation
+
+// Contract ABI and address
+const contractABI = [ 
+    // Add your contract's ABI here
+];
+const contractAddress = '0x840399F9b4CBe04a80facD844c6358d8c2d981fB';
+
+// Create a contract instance
+// const spheronContract = new web3.eth.Contract(spheronABI, contractAddress);
+
+
 
 const register = async(req,res) => {
 
@@ -100,57 +115,37 @@ const register = async(req,res) => {
 }
 
 const available = async(req,res) => {
+  try {
+    // Fetch data from the API
+    const response = await axios.get('https://provider.spheron.network/api/gpu-prices');
+    const gpuPrices = response.data;
 
-    try {
-        const maxMachineId = parseInt(await clusterContract.machineId());
-        let allMachines = [];
+    // Process and send back the data
+    const processedData = gpuPrices.map((gpu, key) => ({
+      machineId: key,
+      availableNum: gpu.availableNum,
+      cpuName: gpu.name,
+      vendor: gpu.vendor,
+      gpuName: gpu.name,
+      gpuVRAM: 1,
+      totalRAM: 1,
+      storageAvailable: 1,
+      coreCount: 10,
+      IPAddress: 1,
+      portsOpen: [8080],
+      region: 'us-east',
+      bidPrice: gpu.averagePrice,
+      isAvailable: 1,
+      isListed: 1,
+    }));
 
-  
-        if (maxMachineId > 10000) {
-          const allContractCall = [];
-          let currentMachineId = 10001;
-    
-          while (maxMachineId >= currentMachineId) {
-            allContractCall.push(clusterContract.machines(currentMachineId));
-            currentMachineId++;
-          }
-    
-          var responses = await Promise.all(allContractCall);
-    
-          for (let i = 0; i < responses.length; i++) {
 
 
-            const machineInfo = responses[i];
-            const info = {
-            machineId: 10000 + i + 1,
-            cpuName: machineInfo.cpuName,
-            gpuName: machineInfo.gpuName,
-            gpuVRAM: parseInt(machineInfo.gpuVRAM),
-            totalRAM: parseInt(machineInfo.totalRAM),
-            storageAvailable: parseInt(machineInfo.storageAvailable),
-            coreCount: parseInt(machineInfo.coreCount),
-            IPAddress: machineInfo.IPAddress,
-            portsOpen: machineInfo.portsOpen,
-            region: machineInfo.region,
-            bidPrice: parseInt(machineInfo.bidPrice),
-            isAvailable: machineInfo.isAvailable,
-            isListed: machineInfo.isListed,
-            };
-    
-            allMachines.push(info); 
-
-          }
-    
-          res.json({
-            success: true,
-            message: allMachines,
-          });
-        }
-      } catch (e) {
-        console.log(e);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
-      }
-
+    res.json(processedData);
+  } catch (error) {
+    console.error('Error fetching GPU prices:', error);
+    res.status(500).send('Error fetching GPU prices');
+  }
 }
 
 const rent = async(req,res) => {
@@ -167,27 +162,27 @@ const rent = async(req,res) => {
           return res.status(400).json({ error: "Not all the required details are provided." });
         }
       
-        const gasPrice = await provider.getGasPrice();
-        const gasLimit = await clusterContract.estimateGas.rentMachine(
-          machineId,
-          rentalDuration,
-          userAddress
-        );
+        // const gasPrice = await provider.getGasPrice();
+        // const gasLimit = await clusterContract.estimateGas.rentMachine(
+        //   machineId,
+        //   rentalDuration,
+        //   userAddress
+        // );
         // Call the rentMachine function in smart contract and get the orderId
-        const order = await clusterContract.rentMachine(
-          machineId,
-          rentalDuration,
-          userAddress,
-          {
-            gasLimit,
-            gasPrice,
-          }
-        );
+        // const order = await clusterContract.rentMachine(
+        //   machineId,
+        //   rentalDuration,
+        //   userAddress,
+        //   {
+        //     gasLimit,
+        //     gasPrice,
+        //   }
+        // );
 
-        await order.wait();
+        // await order.wait();
 
-        const orderId = parseInt(await clusterContract.orderId())
-        console.log(orderId)
+        // const orderId = parseInt(await clusterContract.orderId())
+        // console.log(orderId)
         
 
         const orderInfo = await clusterContract.orders(orderId)

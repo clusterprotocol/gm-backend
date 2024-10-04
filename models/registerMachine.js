@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const registerMachineSchema = new mongoose.Schema({
     cpuname:String,
     gpuname:String,
-    spuVRam:Number,
+    cpuVRam:Number,
     totalRam:Number,
     memorySize:Number,
     coreCount:Number,

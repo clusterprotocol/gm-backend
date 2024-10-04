@@ -17,6 +17,5 @@ router.get("/status", apiKeyMiddleware, (req, res) => {
 // Protected routes
 router.use(apiKeyMiddleware);
 router.use("/machine", machineRouter);
-router.use("/user", userRouter);
 
 module.exports = router;

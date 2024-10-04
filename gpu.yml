@@ -1,0 +1,46 @@
+
+version: "1.0"
+services:
+  gpu-test:
+    image: cae
+    expose:
+      - port: 1
+        as: 80
+        to:
+          - global: true
+    env:
+      - TEST=test
+profiles:
+  name: hello-world
+  mode: provider
+  duration: 1h
+  tier:
+    - community
+  compute:
+    gpu-test:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 20Gi
+        storage:
+          - size: 100Gi
+        gpu:
+          units: 1
+          attributes:
+            vendor:
+              nvidia:
+                - model: rtx3070
+  placement:
+    westcoast:
+      attributes:
+        region: us-west
+      pricing:
+        gpu-test:
+          token: USDT
+          amount: 1.1400000000000001
+deployment:
+  gpu-test:
+    westcoast:
+      profile: gpu-test
+      count: 1

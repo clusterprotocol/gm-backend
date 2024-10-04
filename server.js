@@ -4,7 +4,9 @@ require('dotenv').config();
 const bodyParser = require("body-parser");
 const databaseConnection = require('./Utils/databaseInit.js');
 const serverRoutes = require('./routes');
+const computeRoutes = require('./routes/speheronCLIRoutes');
 const apiKeyRoutes = require('./routes/apiKeyRoutes'); // Import the API key routes
+const userRouter = require("./routes/userRoutes.js");
 
 const app = express();
 const port = 3000;
@@ -26,8 +28,12 @@ app.post('/test', async (req, res) => {
 
 // Integrate the API key routes
 app.use('/api/keys', apiKeyRoutes);
+app.use("/compute", computeRoutes);
 
 // Integrate other routes
+app.use("/api/user", userRouter);
+
+
 app.use("/api", serverRoutes);
 
 // Handle not found routes

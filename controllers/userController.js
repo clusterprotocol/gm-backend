@@ -2,32 +2,51 @@ const {clusterContractInstance} = require('../Contract/contract.js')
 const {clusterContract, provider} = clusterContractInstance()
 require('dotenv').config();
 const ethers = require('ethers')
+const jwt = require('jsonwebtoken');
 
 const userRegister = require('../models/userRegister.js')
 
 const isUser = async(req,res) => {
 
     const userAddress = req.body.userAddress;
-    const userBool = await clusterContract.isRegistered(userAddress);
+    // const userBool = await clusterContract.isRegistered(userAddress);
+    const user = await userRegister.findOne({userAddress: userAddress});
+
+    if(user){
+        // JWT options (optional)
+        const options = {
+        // expiresIn: '1h'  // Token will expire in 1 hour
+        };
+        console.log(user)
+        // Generate the JWT using the payload, secret key, and options
+        const token = jwt.sign(user.userAddress, process.env.JWTSECRET, options);
+
+        return res.json({
+            userBool: user? true: false,
+            user,
+            token
+        })
+    }
     return res.json({
-        userBool: userBool,
+        userBool: user? true: false,
+        user
     })
 }
 
 const userNameStatus = async(req,res) => {
 
     const username = req.body.userName;
-    const usernameBool = await clusterContract.userNameStatus(username);
+    const user = await userRegister.findOne({name: username});
     return res.json({
-        isTaken: usernameBool
+        isTaken: user && true
     })
 }
 
 const getUsername = async(req,res) => {
 
     const userAddress = req.body.userAddress;
-    const user = await clusterContract.users(userAddress);
-    const username = user.name;
+    const user = await userRegister.findOne({userAddress: userAddress});
+    const username = user && user.name;
     return res.json({
         username: username,
     })
@@ -41,6 +60,19 @@ const register = async(req,res) => {
         const userAddress = req.body.userAddress;
         const sshKey = req.body.sshKey;
 
+        const isUser = await userRegister.findOne({userAddress: userAddress});
+
+        if(isUser){
+            // JWT options (optional)
+            const options = {
+                // expiresIn: '1h'  // Token will expire in 1 hour
+            };
+
+            // Generate the JWT using the payload, secret key, and options
+            const token = jwt.sign(isUser.userAddress, process.env.JWTSECRET, options);
+            res.json({ success: true, isUser, token, message: "User already present" });
+        }
+
         const _id = (await userRegister.create(
           {
             name: name,
@@ -50,39 +82,39 @@ const register = async(req,res) => {
         ))._id;
     
         // Check if the everything is provided
-        if (!name ||  !userAddress || !sshKey) {
+        if (!name ||  !userAddress ) {
           return res
             .status(400)
             .json({ error: "Not all the required details are provided." });
         }
         console.log('Data is validated')
 
-        const gasPrice = await provider.getGasPrice()
-        const gasInGwei = ethers.utils.formatUnits(gasPrice, "gwei")
-        console.log(gasInGwei)
-        // const gasPrice = gasData.gasPrice
-        const gasLimit = await clusterContract.estimateGas.registerUser(
-          name,
-          "",
-          userAddress,
-          sshKey
-        );
+        // const gasPrice = await provider.getGasPrice()
+        // const gasInGwei = ethers.utils.formatUnits(gasPrice, "gwei")
+        // console.log(gasInGwei)
+        // // const gasPrice = gasData.gasPrice
+        // const gasLimit = await clusterContract.estimateGas.registerUser(
+        //   name,
+        //   "",
+        //   userAddress,
+        //   sshKey
+        // );
 
-        console.log(ethers.utils.formatUnits(gasLimit, "gwei"))
+        // console.log(ethers.utils.formatUnits(gasLimit, "gwei"))
 
-        const register = await clusterContract.registerUser(
-            name,
-            "",
-            userAddress,
-            sshKey,
-            {
-              gasLimit,
-              gasPrice
-            }
-          );
-          console.log("Tx Sent")
-          await register.wait();
-          console.log(register)
+        // const register = await clusterContract.registerUser(
+        //     name,
+        //     "",
+        //     userAddress,
+        //     sshKey,
+        //     {
+        //       gasLimit,
+        //       gasPrice
+        //     }
+        //   );
+        //   console.log("Tx Sent")
+        //   await register.wait();
+        //   console.log(register)
           
 
         const userToUpdate = await userRegister.findById(_id);
@@ -92,7 +124,15 @@ const register = async(req,res) => {
           await userToUpdate.save();
         }
         
-        res.json({ success: true, message: "Registered user successfully" });
+        // JWT options (optional)
+        const options = {
+            // expiresIn: 10000  // Token will expire in 1 hour
+        };
+        console.log(userToUpdate,process.env.JWTSECRET, options)
+        // Generate the JWT using the payload, secret key, and options
+        const token = jwt.sign(userToUpdate.userAddress, process.env.JWTSECRET, options);
+
+        res.json({ success: true, userToUpdate, token, message: "Registered user successfully" });
       } catch (e) {
         console.error("Error registering user:", e);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -103,10 +143,10 @@ const register = async(req,res) => {
 
 const getUsdBalance = async(req, res) => {
     try{
-        const usdBal = parseInt(await clusterContract.getUserBalnce(req.body.userAddress)) * (10**-6);
+        // const usdBal = parseInt(await clusterContract.getUserBalnce(req.body.userAddress)) * (10**-6);
         res.json({
             success: true,
-            usdBalance: usdBal
+            usdBalance: 10
         })
 
     }
