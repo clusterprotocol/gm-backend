@@ -191,7 +191,7 @@ router.get("/deployment/events/:deploymentId", async (req, res) => {
           // Update the order's data.status to 'Offline' in the database
           await Deployment.findOneAndUpdate(
             { deploymentid: deploymentId },
-            { 'data.status': "Offline" }
+            { 'data.status': "Offline", status: "Offline", }
           );
           return res.status(200).json({
             success: true,
@@ -228,7 +228,7 @@ router.get("/deployment/events/:deploymentId", async (req, res) => {
           // Update the order's data.status to 'Offline' in the database
           await Deployment.findOneAndUpdate(
             { deploymentid: deploymentId },
-            { 'data.status': "Offline" }
+            { 'data.status': "Offline", status: "Offline", }
           );
           return res.status(200).json({
             success: true,
@@ -288,7 +288,7 @@ router.get("/deployment/close/:deploymentId", (req, res) => {
       // Update deployment status to closed in MongoDB
       await Deployment.findOneAndUpdate(
         { deploymentid: deploymentId },
-        { 'data.status': "Offline" }
+        { 'data.status': "Offline", status: "Offline", }
     );
       res.status(200).json({
         success: true,
