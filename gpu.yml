@@ -2,9 +2,9 @@
 version: "1.0"
 services:
   gpu-test:
-    image: cae
+    image: undefined
     expose:
-      - port: 1
+      - port: undefined
         as: 80
         to:
           - global: true
@@ -13,7 +13,7 @@ services:
 profiles:
   name: hello-world
   mode: provider
-  duration: 1h
+  duration: undefinedh
   tier:
     - community
   compute:
@@ -30,17 +30,17 @@ profiles:
           attributes:
             vendor:
               nvidia:
-                - model: rtx3070
+                - model: undefined
   placement:
-    westcoast:
+    undefined:
       attributes:
-        region: us-west
+        region: undefined
       pricing:
         gpu-test:
           token: USDT
-          amount: 1.1400000000000001
+          amount: NaN
 deployment:
   gpu-test:
-    westcoast:
+    undefined:
       profile: gpu-test
       count: 1

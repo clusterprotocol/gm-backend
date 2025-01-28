@@ -1,21 +1,26 @@
 const { Router: expressRouter } = require("express");
 const router = expressRouter();
 
-const machineRouter = require("./machineRoutes");
-const userRouter = require("./userRoutes");
-const apiKeyRouter = require("./apiKeyRoutes");
-const apiKeyMiddleware = require("../middleware/apiKeyMiddleWare.js");
+const machineRouter = require("./machineRoutes.js");
+const apiKeyRouter = require("./apiKeyRoutes.js");
+const apiKeyMiddleware = require("../middleware/auth/apiKeyMiddleWare.js");
+const deploymentRouter = require("./deploymentRoutes.js");
+const userRouter = require("./userRoutes.js");
 
 // Public routes
-router.use("/keys", apiKeyRouter);
+router.use("/user", userRouter);
+
+// Apply API key middleware to all subsequent routes
+router.use(apiKeyMiddleware);
 
 // Status route (protected by API key middleware)
-router.get("/status", apiKeyMiddleware, (req, res) => {
-    res.json({ message: "API is working" });
+router.get("/status", (req, res) => {
+  res.json({ message: "API is working" });
 });
 
 // Protected routes
-router.use(apiKeyMiddleware);
+router.use("/apikey", apiKeyRouter);
 router.use("/machine", machineRouter);
+router.use("/deployment", deploymentRouter);
 
 module.exports = router;
