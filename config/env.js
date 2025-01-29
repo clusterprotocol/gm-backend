@@ -8,6 +8,8 @@ const env = {
   ALCHEMY_WEBSOCKET_KEY: process.env.ALCHEMY_WEBSOCKET_KEY,
   CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS,
   JWTSECRET: process.env.JWTSECRET,
+  SPHERON_PRIVATE_KEY: process.env.SPHERON_PRIVATE_KEY,
+  PROVIDER_PROXY_URL: process.env.PROVIDER_PROXY_URL,
 };
 
 module.exports = env;

@@ -2,9 +2,9 @@
 version: "1.0"
 services:
   gpu-test:
-    image: undefined
+    image: gpu-test-image:latest
     expose:
-      - port: undefined
+      - port: 8080
         as: 80
         to:
           - global: true
@@ -13,7 +13,7 @@ services:
 profiles:
   name: hello-world
   mode: provider
-  duration: undefinedh
+  duration: 24h
   tier:
     - community
   compute:
@@ -30,17 +30,17 @@ profiles:
           attributes:
             vendor:
               nvidia:
-                - model: undefined
+                - model: Tesla T4
   placement:
-    undefined:
+    us-west-1:
       attributes:
-        region: undefined
+        region: us-west-1
       pricing:
         gpu-test:
           token: USDT
-          amount: NaN
+          amount: 51
 deployment:
   gpu-test:
-    undefined:
+    us-west-1:
       profile: gpu-test
       count: 1

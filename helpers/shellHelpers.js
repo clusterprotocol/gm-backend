@@ -9,7 +9,8 @@ const execCommand = (command) => {
 };
 
 const saveYaml = (fileName, content) => {
-  shell.ShellString(content).to(fileName);
+  const filePath = `savedFiles/${fileName}`;
+  shell.ShellString(content).to(filePath);
 };
 
 const extractDeploymentId = (output) => {

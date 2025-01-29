@@ -4,7 +4,7 @@ const router = expressRouter();
 const machineRouter = require("./machineRoutes.js");
 const apiKeyRouter = require("./apiKeyRoutes.js");
 const apiKeyMiddleware = require("../middleware/auth/apiKeyMiddleWare.js");
-const deploymentRouter = require("./deploymentRoutes.js");
+const cloudRouter = require("./cloudRoutes.js");
 const userRouter = require("./userRoutes.js");
 
 // Public routes
@@ -21,6 +21,6 @@ router.get("/status", (req, res) => {
 // Protected routes
 router.use("/apikey", apiKeyRouter);
 router.use("/machine", machineRouter);
-router.use("/deployment", deploymentRouter);
+router.use("/cloud", cloudRouter);
 
 module.exports = router;
