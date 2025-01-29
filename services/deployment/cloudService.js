@@ -1,5 +1,5 @@
 const { cloudConfig } = require("../../constants/cloudConfig.js");
-const spheronDeploymentService = require("./spheron/spheronspheronDeploymentService.js");
+const spheronDeploymentService = require("./spheron/spheronDeploymentService.js");
 const spheronLeaseService = require("./spheron/spheronLeaseService.js");
 const spheronEscrowService = require("./spheron/spheronEscrowService.js");
 
