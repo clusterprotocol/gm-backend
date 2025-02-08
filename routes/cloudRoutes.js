@@ -8,16 +8,25 @@ const cloudRouter = express.Router();
 cloudRouter.use(apiKeyMiddleware);
 
 // Deployment routes
-cloudRouter.post("/create", cloudController.createDeployment);
-cloudRouter.put("/update/:deploymentId", cloudController.updateDeployment);
-cloudRouter.get("/close/:deploymentId", cloudController.closeDeployment);
-cloudRouter.post("/getDeploymentDetails", cloudController.getDeploymentDetails);
-cloudRouter.post("/getLeaseDetails", cloudController.getLeaseDetails);
-cloudRouter.post("/getLeaseIds", cloudController.getLeaseIds);
-cloudRouter.post("/closeLease", cloudController.closeLease);
-cloudRouter.post("/getLeasesByState", cloudController.getLeasesByState);
-cloudRouter.post("/getUserBalance", cloudController.getUserBalance);
-cloudRouter.post("/depositBalance", cloudController.depositBalance);
+cloudRouter.post("/createDeployment", cloudController.createDeployment);
+cloudRouter.put(
+  "/updateDeployment/:deploymentId",
+  cloudController.updateDeployment
+);
+cloudRouter.delete(
+  "/terminateDeployment/:deploymentId",
+  cloudController.terminateDeployment
+);
+cloudRouter.post(
+  "/fetchDeploymentDetails",
+  cloudController.fetchDeploymentDetails
+);
+cloudRouter.post("/fetchLeaseDetails", cloudController.fetchLeaseDetails);
+cloudRouter.post("/fetchLeaseIds", cloudController.fetchLeaseIds);
+cloudRouter.delete("/terminateLease", cloudController.terminateLease);
+cloudRouter.post("/fetchLeasesByState", cloudController.fetchLeasesByState);
+cloudRouter.post("/fetchUserBalance", cloudController.fetchUserBalance);
+cloudRouter.post("/saveDepositBalance", cloudController.saveDepositBalance);
 cloudRouter.post("/withdrawBalance", cloudController.withdrawBalance);
 
 module.exports = cloudRouter;

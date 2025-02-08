@@ -1,12 +1,25 @@
-// Use dynamic import inside an async function to avoid errors with ESM
 const env = require("../env");
 
-async function initializeSpheron() {
-  const { SpheronSDK } = await import("@spheron/protocol-sdk");
-  const spheronClient = new SpheronSDK("testnet", env.SPHERON_PRIVATE_KEY);
+class SpheronClient {
+  constructor() {
+    if (!SpheronClient.instance) {
+      this.client = null;
+      SpheronClient.instance = this;
+    }
+    return SpheronClient.instance;
+  }
 
-  return spheronClient; // Directly return the client instance
+  async initialize() {
+    if (!this.client) {
+      const { SpheronSDK } = await import("@spheron/protocol-sdk");
+      this.client = new SpheronSDK("testnet", env.SPHERON_PRIVATE_KEY);
+    }
+    return this.client;
+  }
 }
 
-// Export the promise that resolves to the client instance
-module.exports = initializeSpheron();
+// Export a single instance of the class
+const spheronClientInstance = new SpheronClient();
+spheronClientInstance.initialize(); // Ensure initialization at startup
+
+module.exports = spheronClientInstance;

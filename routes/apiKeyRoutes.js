@@ -1,6 +1,6 @@
 const express = require("express");
 const apiRouter = express.Router();
-const apiKeyController = require("../controllers/apiKeyController.js");
+const apiKeyController = require("../controllers/ApiKeyController.js");
 const apiKeyMiddleware = require("../middleware/auth/apiKeyMiddleWare.js");
 
 // Apply API key middleware to all subsequent routes

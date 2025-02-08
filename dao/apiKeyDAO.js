@@ -1,19 +1,21 @@
 const ApiKey = require("../models/apiKey");
 
-// Find API key by user address
-const findApiKeyByUserAddress = async (userAddress) => {
-  return await ApiKey.findOne({ userAddress });
-};
+class ApiKeyDAO {
+  // Find API key by user address
+  static async findByUserAddress(userAddress) {
+    return await ApiKey.findOne({ userAddress });
+  }
 
-// Create new API key
-const createApiKey = async (userAddress, key) => {
-  const newApiKey = new ApiKey({ userAddress, key });
-  return await newApiKey.save();
-};
+  // Create a new API key
+  static async create(userAddress, key) {
+    const newApiKey = new ApiKey({ userAddress, key });
+    return await newApiKey.save();
+  }
 
-// Delete API key by key
-const deleteApiKeyByKey = async (key) => {
-  return await ApiKey.deleteOne({ key });
-};
+  // Delete API key by key
+  static async deleteByKey(key) {
+    return await ApiKey.deleteOne({ key });
+  }
+}
 
-module.exports = { findApiKeyByUserAddress, createApiKey, deleteApiKeyByKey };
+module.exports = ApiKeyDAO;

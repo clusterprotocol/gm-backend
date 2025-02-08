@@ -1,24 +1,14 @@
-const userRegister = require("../models/userRegister.js");
+const Order = require("../models/order.js");
 
-const findUserByAddress = async (userAddress) => {
-  return await userRegister.findOne({ userAddress });
-};
+class OrderDAO {
+  async saveNewOrder(orderData) {
+    const newOrder = new Order(orderData);
+    return newOrder.save();
+  }
 
-const findUserByName = async (name) => {
-  return await userRegister.findOne({ name });
-};
+  async findOrderByOrderId(orderId) {
+    return Order.findOne({ orderId });
+  }
+}
 
-const createUser = async (userData) => {
-  return await userRegister.create(userData);
-};
-
-const updateUserSuccess = async (id, success) => {
-  return await userRegister.findByIdAndUpdate(id, { success }, { new: true });
-};
-
-module.exports = {
-  findUserByAddress,
-  findUserByName,
-  createUser,
-  updateUserSuccess,
-};
+module.exports = new OrderDAO();

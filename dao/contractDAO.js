@@ -1,62 +1,62 @@
-const { clusterContractInstance } = require("../Contract/contract.js");
-const { clusterContract } = clusterContractInstance();
+const { ClusterContract } = require("../Contract/contract.js");
+const axios = require("axios");
 
-const isUserRegistered = async (walletAddress) => {
-  return clusterContract.isRegistered(walletAddress);
-};
+class ClusterService {
+  constructor() {
+    this.clusterContract = new ClusterContract().getContract();
+  }
 
-const registerMachines = async (machineData, feeData) => {
-  return clusterContract.registerMachines(
-    machineData.cpuname,
-    machineData.gpuname,
-    machineData.spuVRam,
-    machineData.totalRam,
-    machineData.memorySize,
-    machineData.coreCount,
-    machineData.ipAddr,
-    machineData.openedPorts,
-    machineData.region,
-    machineData.bidprice,
-    machineData.walletAddress,
-    { gasPrice: feeData.gasPrice }
-  );
-};
+  async isUserRegistered(walletAddress) {
+    return this.clusterContract.isRegistered(walletAddress);
+  }
 
-const getOrderDetails = async (orderId) => {
-  return clusterContract.orders(orderId);
-};
+  async registerMachines(machineData, feeData) {
+    return this.clusterContract.registerMachines(
+      machineData.cpuname,
+      machineData.gpuname,
+      machineData.spuVRam,
+      machineData.totalRam,
+      machineData.memorySize,
+      machineData.coreCount,
+      machineData.ipAddr,
+      machineData.openedPorts,
+      machineData.region,
+      machineData.bidprice,
+      machineData.walletAddress,
+      { gasPrice: feeData.gasPrice }
+    );
+  }
 
-const getMachineDetails = async (machineId) => {
-  return clusterContract.machines(machineId);
-};
+  async getOrderDetails(orderId) {
+    return this.clusterContract.orders(orderId);
+  }
 
-const rentMachine = async (machineId, rentalDuration, userAddress) => {
-  return clusterContract.rentMachine(machineId, rentalDuration, userAddress);
-};
+  async getMachineDetails(machineId) {
+    return this.clusterContract.machines(machineId);
+  }
 
-const cancelOrder = async (orderId) => {
-  const tx = await clusterContract.cancelOrder(orderId);
-  return tx.wait(); // Wait for the transaction receipt
-};
+  async rentMachine(machineId, rentalDuration, userAddress) {
+    return this.clusterContract.rentMachine(
+      machineId,
+      rentalDuration,
+      userAddress
+    );
+  }
 
-const getBandwidthFromMachine = async (ipAddress, containerId) => {
-  const linkToSsh = `http://${ipAddress}:6666/bandwidth`;
+  async cancelOrder(orderId) {
+    const tx = await this.clusterContract.cancelOrder(orderId);
+    return tx.wait(); // Wait for the transaction receipt
+  }
 
-  const response = await axios({
-    method: "get",
-    url: linkToSsh,
-    data: { container_id: containerId },
-  });
+  async getBandwidthFromMachine(ipAddress, containerId) {
+    const linkToSsh = `http://${ipAddress}:6666/bandwidth`;
+    const response = await axios({
+      method: "get",
+      url: linkToSsh,
+      data: { container_id: containerId },
+    });
+    return response.data; // { download, upload, ping }
+  }
+}
 
-  return response.data; // { download, upload, ping }
-};
-
-module.exports = {
-  isUserRegistered,
-  registerMachines,
-  getOrderDetails,
-  getMachineDetails,
-  cancelOrder,
-  rentMachine,
-  getBandwidthFromMachine,
-};
+module.exports = new ClusterService();

@@ -1,7 +1,9 @@
 const Deployment = require("../models/deployments");
+const shellHelper = require("../helpers/shellHelpers.js");
 
-const generateYamlConfig = (data) => {
-  return `
+class CloudDAO {
+  static generateYamlConfig(data) {
+    return `
 version: "1.0"
 services:
   gpu-test:
@@ -48,46 +50,50 @@ deployment:
       profile: gpu-test
       count: 1
 `;
-};
+  }
 
-const saveDeploymentToDB = async (deploymentId, data, shellOutput) => {
-  const deployment = new Deployment({
-    deploymentid: deploymentId,
-    dockerImage: data.image,
-    duration: data.rentalDuration,
-    cpuname: data.name,
-    gpuname: data.gpuName,
-    cpuVRam: 20,
-    totalRam: 20,
-    memorySize: 100,
-    coreCount: 1,
-    ipAddr: "192.168.0.1",
-    openedPorts: [data.port],
-    region: data.location,
-    bidprice: data.amount,
-    walletAddress: data.userAddress,
-    data: shellHelper.parseShellOutput(shellOutput),
-  });
-  return deployment.save();
-};
+  static async saveDeploymentToDB(deploymentId, data, shellOutput) {
+    const deployment = new Deployment({
+      deploymentid: deploymentId,
+      dockerImage: data.image,
+      duration: data.rentalDuration,
+      cpuname: data.name,
+      gpuname: data.gpuName,
+      cpuVRam: 20,
+      totalRam: 20,
+      memorySize: 100,
+      coreCount: 1,
+      ipAddr: "192.168.0.1",
+      openedPorts: [data.port],
+      region: data.location,
+      bidprice: data.amount,
+      walletAddress: data.userAddress,
+      data: shellHelper.parseShellOutput(shellOutput),
+    });
+    return deployment.save();
+  }
 
-const getOrdersByUserAddress = (userAddress) =>
-  Deployment.find({ walletAddress: userAddress });
-const updateDeployment = (deploymentId, updateData) =>
-  Deployment.findOneAndUpdate({ deploymentid: deploymentId }, updateData, {
-    new: true,
-  });
-const updateDeploymentStatus = (deploymentId, status) =>
-  Deployment.findOneAndUpdate(
-    { deploymentid: deploymentId },
-    { "data.status": status, status },
-    { new: true }
-  );
+  static getOrdersByUserAddress(userAddress) {
+    return Deployment.find({ walletAddress: userAddress });
+  }
 
-module.exports = {
-  generateYamlConfig,
-  saveDeploymentToDB,
-  getOrdersByUserAddress,
-  updateDeployment,
-  updateDeploymentStatus,
-};
+  static updateDeployment(deploymentId, updateData) {
+    return Deployment.findOneAndUpdate(
+      { deploymentid: deploymentId },
+      updateData,
+      {
+        new: true,
+      }
+    );
+  }
+
+  static updateDeploymentStatus(deploymentId, status) {
+    return Deployment.findOneAndUpdate(
+      { deploymentid: deploymentId },
+      { "data.status": status, status },
+      { new: true }
+    );
+  }
+}
+
+module.exports = CloudDAO;

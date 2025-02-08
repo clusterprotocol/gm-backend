@@ -3,52 +3,53 @@ const clusterABI = require("./clusterABI.json");
 const env = require("../config/env");
 require("dotenv").config();
 
-const SERVER_PRIVATE_KEY = env.SERVER_PRIVATE_KEY;
-const clusterAddress = env.CONTRACT_ADDRESS;
+class ClusterContract {
+  constructor() {
+    this.provider = new ethers.providers.JsonRpcProvider(
+      `https://polygon-amoy.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
+    );
+    this.wallet = new ethers.Wallet(env.SERVER_PRIVATE_KEY);
+    this.connectedWallet = this.wallet.connect(this.provider);
+    this.contract = new ethers.Contract(
+      env.CONTRACT_ADDRESS,
+      clusterABI,
+      this.connectedWallet
+    );
+  }
 
-// Debugging: Log the private key to verify it's loaded correctly
-// console.log("Private Key:", SERVER_PRIVATE_KEY);
-if (!SERVER_PRIVATE_KEY) {
-  throw new Error(
-    "SERVER_PRIVATE_KEY is not set in the environment variables."
-  );
+  getContract() {
+    return this.contract;
+  }
+
+  getProvider() {
+    return this.provider;
+  }
+
+  getWallet() {
+    return this.wallet;
+  }
 }
 
-const clusterContract = () => {
-  const provider = new ethers.providers.JsonRpcProvider(
-    `https://polygon-amoy.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
-  );
+class ClusterContractWS {
+  constructor() {
+    this.websocketProvider = new ethers.providers.WebSocketProvider(
+      `wss://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_WEBSOCKET_KEY}`
+    );
+    this.wallet = new ethers.Wallet(env.SERVER_PRIVATE_KEY);
+    this.connectedWalletWS = this.wallet.connect(this.websocketProvider);
+    this.contractWS = new ethers.Contract(
+      env.CONTRACT_ADDRESS,
+      clusterABI,
+      this.connectedWalletWS
+    );
+  }
 
-  const wallet = new ethers.Wallet(SERVER_PRIVATE_KEY);
-  const connectedWallet = wallet.connect(provider);
-
-  const clusterContract = new ethers.Contract(
-    clusterAddress,
-    clusterABI,
-    connectedWallet
-  );
-
-  return { clusterContract, provider, wallet };
-};
-
-const clusterContractWS = () => {
-  const websocketProvider = new ethers.providers.WebSocketProvider(
-    `wss://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_WEBSOCKET_KEY}`
-  );
-
-  const wallet = new ethers.Wallet(SERVER_PRIVATE_KEY);
-  const connectedWalletWS = wallet.connect(websocketProvider);
-
-  const clusterContractWS = new ethers.Contract(
-    clusterAddress,
-    clusterABI,
-    connectedWalletWS
-  );
-
-  return { clusterContractWS };
-};
+  getContract() {
+    return this.contractWS;
+  }
+}
 
 module.exports = {
-  clusterContractInstance: clusterContract,
-  clusterContractWSInstance: clusterContractWS,
+  ClusterContract,
+  ClusterContractWS,
 };

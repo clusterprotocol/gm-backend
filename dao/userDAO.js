@@ -1,24 +1,25 @@
 const userRegister = require("../models/userRegister.js");
 
-const findUserByAddress = async (userAddress) => {
-  return await userRegister.findOne({ userAddress });
-};
+class UserDAO {
+  // Find a user by their address
+  async findUserByAddress(userAddress) {
+    return await userRegister.findOne({ userAddress });
+  }
 
-const findUserByName = async (name) => {
-  return await userRegister.findOne({ name });
-};
+  // Find a user by their name
+  async findUserByName(name) {
+    return await userRegister.findOne({ name });
+  }
 
-const createUser = async (userData) => {
-  return await userRegister.create(userData);
-};
+  // Create a new user
+  async createUser(userData) {
+    return await userRegister.create(userData);
+  }
 
-const updateUserSuccess = async (id, success) => {
-  return await userRegister.findByIdAndUpdate(id, { success }, { new: true });
-};
+  // Update the success status of a user
+  async updateUserSuccess(id, success) {
+    return await userRegister.findByIdAndUpdate(id, { success }, { new: true });
+  }
+}
 
-module.exports = {
-  findUserByAddress,
-  findUserByName,
-  createUser,
-  updateUserSuccess,
-};
+module.exports = new UserDAO();
