@@ -9,17 +9,18 @@ class SpheronService {
 
   async initializeClient() {
     if (!this.spheronClient) {
-      this.spheronClient = await spheronClientPromise;
+      this.spheronClient = spheronClientPromise;
     }
     return this.spheronClient;
   }
 
   async deploy() {
+    console.log("Spheron deploy running");
     const spheronClient = await this.initializeClient();
     const fileContent = fileUtils.readGpuYml();
 
     try {
-      const response = await spheronClient.deployment.createDeployment(
+      const response = await spheronClient.client.deployment.createDeployment(
         fileContent,
         this.providerProxyUrl
       );
@@ -41,10 +42,11 @@ class SpheronService {
   async getDeploymentDetails(deploymentId) {
     try {
       const spheronClient = await this.initializeClient();
-      const deploymentDetails = await spheronClient.deployment.getDeployment(
-        deploymentId,
-        this.providerProxyUrl
-      );
+      const deploymentDetails =
+        await spheronClient.client.deployment.getDeployment(
+          deploymentId,
+          this.providerProxyUrl
+        );
       return {
         success: true,
         message: "Deployment details retrieved successfully.",
@@ -62,7 +64,7 @@ class SpheronService {
   async closeDeployment(deploymentId) {
     try {
       const spheronClient = await this.initializeClient();
-      const response = await spheronClient.deployment.closeDeployment(
+      const response = await spheronClient.client.deployment.closeDeployment(
         deploymentId
       );
       return {
@@ -83,11 +85,12 @@ class SpheronService {
     try {
       const spheronClient = await this.initializeClient();
       const fileContent = fileUtils.readGpuYml();
-      const updatedDeployment = await spheronClient.deployment.updateDeployment(
-        deploymentId,
-        fileContent,
-        this.providerProxyUrl
-      );
+      const updatedDeployment =
+        await spheronClient.client.deployment.updateDeployment(
+          deploymentId,
+          fileContent,
+          this.providerProxyUrl
+        );
       return {
         success: true,
         message: "Deployment updated successfully.",
@@ -105,7 +108,7 @@ class SpheronService {
   async getUserBalance(token, walletAddress) {
     try {
       const spheronClient = await this.initializeClient();
-      const userBalance = await spheronClient.escrow.getUserBalance(
+      const userBalance = await spheronClient.client.escrow.getUserBalance(
         token,
         walletAddress
       );
@@ -126,7 +129,8 @@ class SpheronService {
   async depositBalance(token, amount) {
     try {
       const spheronClient = await this.initializeClient();
-      const depositReceipt = await spheronClient.escrow.depositBalance({
+      console.log("spheron deposit balance", token, amount);
+      const depositReceipt = await spheronClient.client.escrow.depositBalance({
         token: token,
         amount: amount,
       });
@@ -147,7 +151,7 @@ class SpheronService {
   async withdrawBalance(token, amount) {
     try {
       const spheronClient = await this.initializeClient();
-      const withdrawReceipt = await spheronClient.escrow.withdrawBalance(
+      const withdrawReceipt = await spheronClient.client.escrow.withdrawBalance(
         token,
         amount
       );
@@ -168,7 +172,7 @@ class SpheronService {
   async getLeaseDetails(leaseId) {
     try {
       const spheronClient = await this.initializeClient();
-      const leaseDetails = await spheronClient.leases.getLeaseDetails(
+      const leaseDetails = await spheronClient.client.leases.getLeaseDetails(
         leaseId,
         this.providerProxyUrl
       );
@@ -189,7 +193,7 @@ class SpheronService {
   async closeLease(leaseId) {
     try {
       const spheronClient = await this.initializeClient();
-      const response = await spheronClient.leases.closeLease(leaseId);
+      const response = await spheronClient.client.leases.closeLease(leaseId);
       return {
         success: true,
         message: "Lease cancelled successfully.",
@@ -210,7 +214,7 @@ class SpheronService {
       const spheronClient = await this.initializeClient();
 
       const { activeLeaseIds, terminatedLeaseIds, allLeaseIds } =
-        await spheronClient.leases.getLeaseIds(walletAddress);
+        await spheronClient.client.leases.getLeaseIds(walletAddress);
       return {
         success: true,
         message: "Deployment updated successfully.",
@@ -232,7 +236,7 @@ class SpheronService {
       // Wait for the spheronClient to be initialized
       const spheronClient = await this.initializeClient();
 
-      const leases = await spheronClient.leases.getLeaseIds(
+      const leases = await spheronClient.client.leases.getLeaseIds(
         walletAddress,
         options
       );

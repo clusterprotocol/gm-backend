@@ -125,7 +125,7 @@
 
 const { cloudConfig } = require("../../constants/cloudConfig.js");
 const SpheronServiceWrapper = require("./spheron/spheronServiceWrapper");
-const AwsServiceWrapper = require("./aws/awsServiceWrapper");
+const AwsService = require("./aws/AwsService");
 
 class CloudService {
   constructor(cloudProvider) {
@@ -137,9 +137,10 @@ class CloudService {
     switch (this.cloudProvider) {
       case "SPHERON":
         this.cloudService = new SpheronServiceWrapper();
+
         break;
       case "AWS":
-        this.cloudService = new AwsServiceWrapper();
+        this.cloudService = new AwsService();
         break;
     }
   }
@@ -152,6 +153,10 @@ class ServiceProvider extends CloudService {
 
   async fetchDeploymentDetails(deploymentId) {
     return await this.cloudService.fetchDeploymentDetails(deploymentId);
+  }
+
+  async fetchAvailableImages() {
+    return await this.cloudService.fetchAvailableImages();
   }
 
   async terminateDeployment(deploymentId) {

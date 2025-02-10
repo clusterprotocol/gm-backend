@@ -26,12 +26,12 @@ class SpheronServiceWrapper {
     return this.spheronService.closeLease(leaseId);
   }
 
-  async fetchUserBalance() {
-    return this.spheronService.getUserBalance();
+  async fetchUserBalance(token, walletAddress) {
+    return this.spheronService.getUserBalance(token, walletAddress);
   }
 
-  async saveDepositBalance(amount) {
-    return this.spheronService.depositBalance(amount);
+  async saveDepositBalance(token, amount) {
+    return this.spheronService.depositBalance(token, amount);
   }
 
   async withdrawBalance(token, amount) {

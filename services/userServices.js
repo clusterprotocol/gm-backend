@@ -57,8 +57,14 @@ class UserService {
 
   // Retrieve the username associated with a user address
   async getUsername(userAddress) {
-    const user = await findUserByAddress(userAddress);
+    const user = await UserDAO.findUserByAddress(userAddress);
     return { username: user?.name || null };
+  }
+
+  // Retrieve the username associated with a user address
+  async getUseAddress(userAddress) {
+    const user = await UserDAO.findUserByAddress(userAddress);
+    return { userAddress: user?.userAddress || null };
   }
 }
 

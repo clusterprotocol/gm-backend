@@ -42,7 +42,7 @@ profiles:
         region: ${data.location}
       pricing:
         gpu-test:
-          token: USDT
+          token: CST
           amount: ${data.amount + 1}
 deployment:
   gpu-test:

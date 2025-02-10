@@ -70,7 +70,7 @@ class UserController {
   async getUsdAdds(req, res) {
     try {
       const { userAddress } = req.body;
-      const response = await ContractServices.getUsdAdds(userAddress);
+      const response = await UserService.getUseAddress(userAddress);
       res.json(response);
     } catch (error) {
       res

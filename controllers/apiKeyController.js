@@ -2,7 +2,7 @@ const ApiKeyService = require("../services/ApiKeyService");
 
 class ApiKeyController {
   // Generate API Key
-  static async generateApiKey(req, res) {
+  async generateApiKey(req, res) {
     try {
       const { userAddress } = req.body;
 
@@ -19,7 +19,7 @@ class ApiKeyController {
   }
 
   // Revoke API Key
-  static async revokeApiKey(req, res) {
+  async revokeApiKey(req, res) {
     try {
       const { apiKey } = req.body;
 
@@ -33,7 +33,7 @@ class ApiKeyController {
         return res.status(404).json({ message: "API key not found" });
       }
 
-      res.json({ message: "API key revoked" });
+      return res.json({ message: "API key revoked" });
     } catch (error) {
       console.error("Error revoking API key:", error);
       res.status(500).json({ message: "Internal Server Error" });

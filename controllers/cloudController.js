@@ -1,24 +1,25 @@
 const cloudDAO = require("../dao/cloudDAO.js");
 const shellHelper = require("../helpers/shellHelpers.js");
-const cloudService = require("../services/deployment/cloudService.js");
+const CloudService = require("../services/deployment/cloudService.js");
 
 class CloudController {
-  static async createDeployment(req, res) {
+  async createDeployment(req, res) {
     try {
       const deploymentData = req.body;
+      const cloudService = new CloudService(deploymentData.cloudProvider);
       const yamlConfig = cloudDAO.generateYamlConfig(deploymentData);
       shellHelper.saveYaml("gpu.yml", yamlConfig);
       const deploymentResponse = await cloudService.createDeployment(
         deploymentData
       );
-
+      console.log("deploymentResponse", deploymentResponse);
       if (!deploymentResponse.success) {
         return res
           .status(500)
-          .json({ success: false, error: "Deployment ID not found." });
+          .json({ success: false, error: deploymentResponse.error });
       }
 
-      const deploymentId = deploymentResponse.deploymentId;
+      const deploymentId = deploymentResponse?.deploymentId;
       const deployment = await cloudDAO.saveDeploymentToDB(
         deploymentId,
         deploymentData
@@ -34,10 +35,11 @@ class CloudController {
     }
   }
 
-  static async updateDeployment(req, res) {
+  async updateDeployment(req, res) {
     try {
       const { deploymentId } = req.params;
       const updateData = req.body;
+      const cloudService = new CloudService(updateData.cloudProvider);
       const yamlConfig = cloudDAO.generateYamlConfig(updateData);
       shellHelper.saveYaml("gpu.yml", yamlConfig);
 
@@ -60,9 +62,10 @@ class CloudController {
     }
   }
 
-  static async terminateDeployment(req, res) {
+  async terminateDeployment(req, res) {
     try {
-      const { deploymentId } = req.params;
+      const { deploymentId, cloudProvider } = req.params;
+      const cloudService = new CloudService(cloudProvider);
       await cloudService.terminateDeployment(deploymentId);
       res.status(200).json({
         success: true,
@@ -73,9 +76,10 @@ class CloudController {
     }
   }
 
-  static async fetchDeploymentDetails(req, res) {
+  async fetchDeploymentDetails(req, res) {
     try {
-      const { deploymentId } = req.params;
+      const { deploymentId, cloudProvider } = req.params;
+      const cloudService = new CloudService(cloudProvider);
       const details = await cloudService.fetchDeploymentDetails(deploymentId);
       res.status(200).json({
         success: true,
@@ -87,9 +91,25 @@ class CloudController {
     }
   }
 
-  static async fetchLeaseDetails(req, res) {
+  async fetchAvailableImages(req, res) {
     try {
-      const { leaseId } = req.params;
+      const { cloudProvider } = req.body;
+      const cloudService = new CloudService(cloudProvider);
+      const details = await cloudService.fetchAvailableImages();
+      res.status(200).json({
+        success: true,
+        message: "Images details fetched successfully.",
+        details,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async fetchLeaseDetails(req, res) {
+    try {
+      const { leaseId, cloudProvider } = req.params;
+      const cloudService = new CloudService(cloudProvider);
       const leaseDetails = await cloudService.fetchLeaseDetails(leaseId);
       res.status(200).json({
         success: true,
@@ -101,9 +121,10 @@ class CloudController {
     }
   }
 
-  static async terminateLease(req, res) {
+  async terminateLease(req, res) {
     try {
-      const { leaseId } = req.params;
+      const { leaseId, cloudProvider } = req.params;
+      const cloudService = new CloudService(cloudProvider);
       await cloudService.terminateLease(leaseId);
       res.status(200).json({
         success: true,
@@ -114,9 +135,10 @@ class CloudController {
     }
   }
 
-  static async fetchLeaseIds(req, res) {
+  async fetchLeaseIds(req, res) {
     try {
-      const { walletAddress } = req.body;
+      const { walletAddress, cloudProvider } = req.body;
+      const cloudService = new CloudService(cloudProvider);
       const leaseIds = await cloudService.fetchLeaseIds(walletAddress);
       res.status(200).json({
         success: true,
@@ -128,9 +150,10 @@ class CloudController {
     }
   }
 
-  static async fetchLeasesByState(req, res) {
+  async fetchLeasesByState(req, res) {
     try {
-      const { walletAddress, options } = req.body;
+      const { walletAddress, options, cloudProvider } = req.body;
+      const cloudService = new CloudService(cloudProvider);
       const leases = await cloudService.fetchLeasesByState(
         walletAddress,
         options
@@ -145,32 +168,36 @@ class CloudController {
     }
   }
 
-  static async fetchUserBalance(req, res) {
+  async fetchUserBalance(req, res) {
     try {
       const { token, walletAddress, cloudProvider } = req.body;
+      console.log("fetch User Balance", {
+        token,
+        walletAddress,
+        cloudProvider,
+      });
+      const cloudService = new CloudService(cloudProvider);
       const balanceResponse = await cloudService.fetchUserBalance(
         token,
         walletAddress,
         cloudProvider
       );
+      console.log("balanceResponse ", balanceResponse);
       if (!balanceResponse.success) {
         return res
           .status(500)
           .json({ success: false, error: "Failed to fetch user balance." });
       }
-      res.status(200).json({
-        success: true,
-        message: "User balance fetched successfully.",
-        balance: balanceResponse.leaseDetails,
-      });
+      res.status(200).json(balanceResponse);
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
   }
 
-  static async saveDepositBalance(req, res) {
+  async saveDepositBalance(req, res) {
     try {
       const { token, amount, cloudProvider } = req.body;
+      const cloudService = new CloudService(cloudProvider);
       const balanceResponse = await cloudService.saveDepositBalance(
         token,
         amount,
@@ -191,9 +218,10 @@ class CloudController {
     }
   }
 
-  static async withdrawBalance(req, res) {
+  async withdrawBalance(req, res) {
     try {
       const { token, amount, cloudProvider } = req.body;
+      const cloudService = new CloudService(cloudProvider);
       const balanceResponse = await cloudService.withdrawBalance(
         token,
         amount,

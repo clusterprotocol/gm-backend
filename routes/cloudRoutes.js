@@ -28,5 +28,6 @@ cloudRouter.post("/fetchLeasesByState", cloudController.fetchLeasesByState);
 cloudRouter.post("/fetchUserBalance", cloudController.fetchUserBalance);
 cloudRouter.post("/saveDepositBalance", cloudController.saveDepositBalance);
 cloudRouter.post("/withdrawBalance", cloudController.withdrawBalance);
+cloudRouter.post("/fetchAvailableImages", cloudController.fetchAvailableImages);
 
 module.exports = cloudRouter;
