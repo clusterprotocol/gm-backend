@@ -12,7 +12,7 @@ const authRoutes = require("./routes/authRouter.js");
 const app = express();
 const port = 4000;
 
-app.use(cors());
+app.use(cors({ origin: "*", credentials: true }));
 app.use(bodyParser.json());
 
 // Root URL response (optional)
