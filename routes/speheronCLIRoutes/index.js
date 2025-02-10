@@ -71,7 +71,7 @@ profiles:
         region: us-west
       pricing:
         gpu-test:
-          token: ETH
+          token: CST
           amount: ${amount + 1}
 deployment:
   gpu-test:
@@ -93,7 +93,7 @@ deployment:
 
     // Assuming deployment ID can be extracted from stdout
     const deploymentId = extractDeploymentId(stdout);
-
+    console.log("deploymentID", deploymentId);
     if (!deploymentId) {
       return res
         .status(500)

@@ -112,7 +112,6 @@ const available = async (req, res) => {
       "https://provider.spheron.network/api/gpu-prices"
     );
     const gpuPrices = response.data;
-
     // Process and send back the data
     const processedData = gpuPrices.map((gpu, key) => ({
       machineId: key,

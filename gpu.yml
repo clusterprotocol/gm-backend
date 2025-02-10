@@ -30,15 +30,15 @@ profiles:
           attributes:
             vendor:
               nvidia:
-                - model: rtx6000-ada
+                - model: rtx4090
   placement:
     westcoast:
       attributes:
         region: us-west
       pricing:
         gpu-test:
-          token: ETH
-          amount: 1.85
+          token: CST
+          amount: 1.27
 deployment:
   gpu-test:
     westcoast:
