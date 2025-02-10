@@ -2,9 +2,9 @@
 version: "1.0"
 services:
   gpu-test:
-    image: cae
+    image: jenkins/jenkins:lts
     expose:
-      - port: 1
+      - port: 8080
         as: 80
         to:
           - global: true
@@ -30,15 +30,15 @@ profiles:
           attributes:
             vendor:
               nvidia:
-                - model: rtx3070
+                - model: rtx6000-ada
   placement:
     westcoast:
       attributes:
         region: us-west
       pricing:
         gpu-test:
-          token: USDT
-          amount: 1.1400000000000001
+          token: ETH
+          amount: 1.85
 deployment:
   gpu-test:
     westcoast:
