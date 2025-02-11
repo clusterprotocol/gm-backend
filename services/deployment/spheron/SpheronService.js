@@ -24,13 +24,14 @@ class SpheronService {
         fileContent,
         this.providerProxyUrl
       );
+      console.log("Deployment Creation ", response);
       return {
         success: true,
         message: "Deployment initiated successfully.",
-        deploymentId: response.leaseId,
-        url: response.url,
+        response,
       };
     } catch (error) {
+      console.log("error", error);
       return {
         success: false,
         message: "Deployment failed.",
@@ -41,6 +42,7 @@ class SpheronService {
 
   async getDeploymentDetails(deploymentId) {
     try {
+      console.log("Spheron getDeploymentDetails ", deploymentId);
       const spheronClient = await this.initializeClient();
       const deploymentDetails =
         await spheronClient.client.deployment.getDeployment(
@@ -151,9 +153,12 @@ class SpheronService {
   async withdrawBalance(token, amount) {
     try {
       const spheronClient = await this.initializeClient();
+      console.log("withdraw Balance spheron ", token, amount);
       const withdrawReceipt = await spheronClient.client.escrow.withdrawBalance(
-        token,
-        amount
+        {
+          token,
+          amount,
+        }
       );
       return {
         success: true,

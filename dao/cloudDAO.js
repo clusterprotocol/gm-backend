@@ -2,34 +2,35 @@ const Deployment = require("../models/deployments");
 const shellHelper = require("../helpers/shellHelpers.js");
 
 class CloudDAO {
-  static generateYamlConfig(data) {
+  static generateYamlConfigNew(data) {
     return `
 version: "1.0"
+
 services:
-  gpu-test:
+  py-cuda:
     image: ${data.image}
     expose:
       - port: ${data.port}
-        as: 80
+        as: ${data.port}
         to:
           - global: true
     env:
-      - TEST=test
+      - JUPYTER_TOKEN=sentient
 profiles:
-  name: hello-world
-  mode: provider
+  name: py-cuda
   duration: ${data.rentalDuration}h
+  mode: provider
   tier:
     - community
   compute:
-    gpu-test:
+    py-cuda:
       resources:
         cpu:
           units: 1
         memory:
-          size: 20Gi
+          size: 16Gi
         storage:
-          - size: 100Gi
+          - size: 200Gi
         gpu:
           units: 1
           attributes:
@@ -41,18 +42,19 @@ profiles:
       attributes:
         region: ${data.location}
       pricing:
-        gpu-test:
+        py-cuda:
           token: CST
           amount: ${data.amount + 1}
+
 deployment:
-  gpu-test:
+  py-cuda:
     ${data.location}:
-      profile: gpu-test
+      profile: py-cuda
       count: 1
-`;
+  `;
   }
 
-  static async saveDeploymentToDB(deploymentId, data, shellOutput) {
+  static async saveDeploymentToDB(deploymentId, data, deploymentResponse) {
     const deployment = new Deployment({
       deploymentid: deploymentId,
       dockerImage: data.image,
@@ -68,7 +70,7 @@ deployment:
       region: data.location,
       bidprice: data.amount,
       walletAddress: data.userAddress,
-      data: shellHelper.parseShellOutput(shellOutput),
+      data: deploymentResponse,
     });
     return deployment.save();
   }

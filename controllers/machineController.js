@@ -58,6 +58,7 @@ class MachineController {
         IPAddress: 1,
         portsOpen: [8080],
         region: "us-east",
+        originalRegion: gpu.region,
         bidPrice: gpu.averagePrice,
         isAvailable: 1,
         isListed: 1,

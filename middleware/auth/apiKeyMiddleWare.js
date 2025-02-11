@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const apiKeyMiddleware = async (req, res, next) => {
   const token = req.header("Authorization");
+  console.log("Authorisation ", token);
 
   if (!token) {
     return res.status(401).json({ message: "Token is missing" });
@@ -24,8 +25,8 @@ const apiKeyMiddleware = async (req, res, next) => {
         return res.status(401).json({ message: "Invalid token" });
       } else {
         // Token is valid, and we have the decoded payload
-        // console.log("Decoded JWT payload:", decoded);
-        req.body.userAddress = decoded.userAddress;
+        console.log("Decoded JWT payload:", decoded);
+        req.body.userAddress = decoded;
         next();
       }
     });

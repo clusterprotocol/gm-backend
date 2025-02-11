@@ -9,14 +9,8 @@ cloudRouter.use(apiKeyMiddleware);
 
 // Deployment routes
 cloudRouter.post("/createDeployment", cloudController.createDeployment);
-cloudRouter.put(
-  "/updateDeployment/:deploymentId",
-  cloudController.updateDeployment
-);
-cloudRouter.delete(
-  "/terminateDeployment/:deploymentId",
-  cloudController.terminateDeployment
-);
+cloudRouter.put("/updateDeployment", cloudController.updateDeployment);
+cloudRouter.delete("/terminateDeployment", cloudController.terminateDeployment);
 cloudRouter.post(
   "/fetchDeploymentDetails",
   cloudController.fetchDeploymentDetails

@@ -6,8 +6,9 @@ class CloudController {
   async createDeployment(req, res) {
     try {
       const deploymentData = req.body;
+      console.log(req.body);
       const cloudService = new CloudService(deploymentData.cloudProvider);
-      const yamlConfig = cloudDAO.generateYamlConfig(deploymentData);
+      const yamlConfig = cloudDAO.generateYamlConfigNew(deploymentData);
       shellHelper.saveYaml("gpu.yml", yamlConfig);
       const deploymentResponse = await cloudService.createDeployment(
         deploymentData
@@ -19,10 +20,11 @@ class CloudController {
           .json({ success: false, error: deploymentResponse.error });
       }
 
-      const deploymentId = deploymentResponse?.deploymentId;
+      const deploymentId = parseInt(deploymentResponse.response?.leaseId);
       const deployment = await cloudDAO.saveDeploymentToDB(
         deploymentId,
-        deploymentData
+        deploymentData,
+        deploymentResponse
       );
 
       res.status(201).json({
@@ -64,7 +66,8 @@ class CloudController {
 
   async terminateDeployment(req, res) {
     try {
-      const { deploymentId, cloudProvider } = req.params;
+      const { deploymentId, cloudProvider } = req.query;
+      console.log("teminatedeployment ", deploymentId, cloudProvider);
       const cloudService = new CloudService(cloudProvider);
       await cloudService.terminateDeployment(deploymentId);
       res.status(200).json({
@@ -78,7 +81,8 @@ class CloudController {
 
   async fetchDeploymentDetails(req, res) {
     try {
-      const { deploymentId, cloudProvider } = req.params;
+      const { deploymentId, cloudProvider } = req.body;
+      console.log("fetchDeploymentDetails", deploymentId, cloudProvider);
       const cloudService = new CloudService(cloudProvider);
       const details = await cloudService.fetchDeploymentDetails(deploymentId);
       res.status(200).json({
@@ -123,12 +127,12 @@ class CloudController {
 
   async terminateLease(req, res) {
     try {
-      const { leaseId, cloudProvider } = req.params;
+      const { deploymentId, cloudProvider } = req.query;
       const cloudService = new CloudService(cloudProvider);
-      await cloudService.terminateLease(leaseId);
+      await cloudService.terminateLease(deploymentId);
       res.status(200).json({
         success: true,
-        message: `Lease ID: ${leaseId} closed successfully.`,
+        message: `Lease ID: ${deploymentId} closed successfully.`,
       });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -200,8 +204,7 @@ class CloudController {
       const cloudService = new CloudService(cloudProvider);
       const balanceResponse = await cloudService.saveDepositBalance(
         token,
-        amount,
-        cloudProvider
+        amount
       );
       if (!balanceResponse.success) {
         return res
@@ -221,12 +224,9 @@ class CloudController {
   async withdrawBalance(req, res) {
     try {
       const { token, amount, cloudProvider } = req.body;
+      console.log("withdraw balance ", token, amount);
       const cloudService = new CloudService(cloudProvider);
-      const balanceResponse = await cloudService.withdrawBalance(
-        token,
-        amount,
-        cloudProvider
-      );
+      const balanceResponse = await cloudService.withdrawBalance(token, amount);
       if (!balanceResponse.success) {
         return res
           .status(500)
