@@ -18,7 +18,7 @@ userRouter
 userRouter.route("/getOrders").post(apiKeyMiddleware, userController.getOrders);
 userRouter
   .route("/userNameStatus")
-  .post(apiKeyMiddleware, userController.userNameStatus);
+  .post(userController.userNameStatus);
 userRouter
   .route("/getUsername")
   .post(apiKeyMiddleware, userController.getUsername);
