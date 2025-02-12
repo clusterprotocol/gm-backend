@@ -1,46 +1,48 @@
 
 version: "1.0"
+
 services:
-  gpu-test:
-    image: sunny0183/nextjs-docker
+  py-cuda:
+    image: jenkins/jenkins:lts
     expose:
-      - port: 3000
-        as: 80
+      - port: 8080
+        as: 8080
         to:
           - global: true
     env:
-      - TEST=test
+      - JUPYTER_TOKEN=sentient
 profiles:
-  name: hello-world
-  mode: provider
+  name: py-cuda
   duration: 1h
+  mode: provider
   tier:
     - community
   compute:
-    gpu-test:
+    py-cuda:
       resources:
         cpu:
-          units: 1
+          units: 10
         memory:
-          size: 20Gi
+          size: 16Gi
         storage:
-          - size: 100Gi
+          - size: 200Gi
         gpu:
           units: 1
           attributes:
             vendor:
               nvidia:
-                - model: rtx4090
+                - model: rtx6000-ada
   placement:
-    westcoast:
+    westcost:
       attributes:
         region: us-west
       pricing:
-        gpu-test:
+        py-cuda:
           token: CST
-          amount: 1.27
+          amount: 0.9
+
 deployment:
-  gpu-test:
-    westcoast:
-      profile: gpu-test
+  py-cuda:
+    westcost:
+      profile: py-cuda
       count: 1

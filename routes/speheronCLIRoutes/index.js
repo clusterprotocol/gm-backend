@@ -16,6 +16,8 @@ const express = require("express");
 
 const shell = require("shelljs");
 const Deployment = require("../../models/deployments.js");
+const userRegister = require("../../models/userRegister.js");
+const Transaction = require("../../models/transaction.js");
 
 // Create Deployment & Fetch Deployment Info
 router.post("/deployment/create", async (req, res) => {
@@ -24,6 +26,7 @@ router.post("/deployment/create", async (req, res) => {
     location,
     gpuName,
     machineId,
+    region,
     amount,
     image,
     port,
@@ -34,31 +37,32 @@ router.post("/deployment/create", async (req, res) => {
   // Create the YAML file based on API input
   const yamlConfig = `
 version: "1.0"
+
 services:
-  gpu-test:
+  py-cuda:
     image: ${image}
     expose:
       - port: ${port}
-        as: 80
+        as: ${port}
         to:
           - global: true
     env:
-      - TEST=test
+      - JUPYTER_TOKEN=sentient
 profiles:
-  name: hello-world
-  mode: provider
+  name: py-cuda
   duration: ${rentalDuration}h
+  mode: provider
   tier:
     - community
   compute:
-    gpu-test:
+    py-cuda:
       resources:
         cpu:
-          units: 1
+          units: 10
         memory:
-          size: 20Gi
+          size: 16Gi
         storage:
-          - size: 100Gi
+          - size: 200Gi
         gpu:
           units: 1
           attributes:
@@ -66,20 +70,21 @@ profiles:
               nvidia:
                 - model: ${gpuName}
   placement:
-    westcoast:
+    westcost:
       attributes:
-        region: us-west
+        region: ${location}
       pricing:
-        gpu-test:
+        py-cuda:
           token: CST
-          amount: ${amount + 1}
+          amount: ${amount}
+
 deployment:
-  gpu-test:
-    westcoast:
-      profile: gpu-test
+  py-cuda:
+    westcost:
+      profile: py-cuda
       count: 1
 `;
-  console.log(yamlConfig);
+
   // Write YAML to file (gpu.yml)
   shell.ShellString(yamlConfig).to("gpu.yml");
 
@@ -90,6 +95,8 @@ deployment:
     if (code !== 0) {
       return res.status(500).json({ success: false, error: stderr });
     }
+
+    console.log("stdout ", stdout);
 
     // Assuming deployment ID can be extracted from stdout
     const deploymentId = extractDeploymentId(stdout);
@@ -108,6 +115,9 @@ deployment:
         return res.status(500).json({ success: false, error: fetchStderr });
       }
 
+      const shellOutputToJson = parseShellOutput(fetchStdout);
+      console.log("shellOutputToJson ", shellOutputToJson);
+
       // Save deployment details to MongoDB
       const deployment = new Deployment({
         deploymentid: deploymentId,
@@ -124,11 +134,32 @@ deployment:
         region: location,
         bidprice: amount,
         walletAddress: userAddress,
-        data: parseShellOutput(fetchStdout),
+        data: shellOutputToJson,
       });
 
       try {
         await deployment.save();
+
+        const user = await userRegister.findOne({ userAddress: userAddress });
+        let previousBalance = JSON.parse(JSON.stringify(user.wallet.balance));
+        console.log("previousBalance", user.wallet.balance);
+        let finalBalance = user.wallet.balance - shellOutputToJson.pricePerHour; // Subtract money
+        user.wallet.balance = finalBalance;
+        console.log("finalBalance", user.wallet.balance);
+        await user.save();
+
+        // creating a credit transaction
+        const transaction = new Transaction({
+          userAddress,
+          amount: shellOutputToJson.pricePerHour,
+          deploymentId,
+          type: "debit",
+          previousBalance,
+          finalBalance,
+        });
+
+        await transaction.save();
+
         return res.status(201).json({
           success: true,
           message: "Deployment created successfully",
@@ -297,20 +328,71 @@ router.put("/deployment/update/:deploymentId", async (req, res) => {
 
 // Close Deployment
 router.get("/deployment/close/:deploymentId", (req, res) => {
+  const { userAddress } = req.body;
+
   const { deploymentId } = req.params;
   const command = `sphnctl deployment close --lid ${deploymentId}`;
 
   shell.exec(command, async (code, stdout, stderr) => {
+    console.log(code, stdout, stderr);
     if (code !== 0) {
       return res.status(500).json({ success: false, error: stderr });
     }
 
     try {
-      // Update deployment status to closed in MongoDB
-      await Deployment.findOneAndUpdate(
+      const deploymentData = await Deployment.findOneAndUpdate(
         { deploymentid: deploymentId },
         { "data.status": "Offline", status: "Offline" }
       );
+
+      // checking for deplyment is active or not
+      const deploymentRunningTime =
+        Date.now() / 3600000 -
+        new Date(deploymentData.createdAt).getTime() / 3600000;
+
+      const isDeploymentActive =
+        deploymentRunningTime < deploymentData.duration; //converting hour into milisec for comaprision
+
+      if (isDeploymentActive) {
+        console.log("Deployment is still active.");
+
+        //caculating remaining amount
+        const remainingAmount =
+          (deploymentData.duration - deploymentRunningTime) *
+          deploymentData.data.pricePerHour;
+
+        console.log("remainingAmount ", remainingAmount);
+
+        // console.log(
+        //   "remainingAmount",
+        //   deploymentData.duration,
+        //   deploymentRunningTime,
+        //   deploymentData.duration - deploymentRunningTime,
+        //   remainingAmount
+        // );
+
+        // adding amount to user wallet
+        const user = await userRegister.findOne({ userAddress: userAddress });
+        let previousBalance = JSON.parse(JSON.stringify(user.wallet.balance));
+        console.log("previousBalance", user.wallet.balance);
+        let finalBalance = user.wallet.balance + remainingAmount;
+        user.wallet.balance = finalBalance;
+        console.log("finalBalance", user.wallet.balance);
+        await user.save();
+
+        // creating a credit transaction
+        const transaction = new Transaction({
+          userAddress,
+          amount: remainingAmount,
+          deploymentId,
+          type: "credit",
+          previousBalance,
+          finalBalance,
+        });
+
+        await transaction.save();
+      }
+
       return res.status(200).json({
         success: true,
         message: `Deployment ID: ${deploymentId} closed successfully`,
@@ -325,7 +407,8 @@ router.get("/deployment/close/:deploymentId", (req, res) => {
 // Helper function to extract Deployment ID from output
 function extractDeploymentId(output) {
   // Regex to extract deployment ID from stdout
-  const deploymentIdMatch = output.match(/lid: (\d+)/);
+
+  const deploymentIdMatch = output.match(/Lid: (\d+)/);
   return deploymentIdMatch ? deploymentIdMatch[1] : null;
 }
 

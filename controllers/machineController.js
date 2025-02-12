@@ -114,7 +114,7 @@ const available = async (req, res) => {
     const gpuPrices = response.data;
     // Process and send back the data
     const processedData = gpuPrices.map((gpu, key) => ({
-      machineId: key,
+      machineId: `${gpu.name}_${gpu.region}`,
       availableNum: gpu.availableNum,
       cpuName: gpu.name,
       vendor: gpu.vendor,
@@ -125,7 +125,8 @@ const available = async (req, res) => {
       coreCount: 10,
       IPAddress: 1,
       portsOpen: [8080],
-      region: "us-east",
+      region: gpu.region,
+      originalPort: gpu.port,
       bidPrice: gpu.averagePrice,
       isAvailable: 1,
       isListed: 1,

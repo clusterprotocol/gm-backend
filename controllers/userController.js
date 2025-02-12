@@ -162,7 +162,7 @@ const getUsdBalance = async (req, res) => {
     if (user) {
       return res.json({
         success: true,
-        usdBalance: user.usdBalance,
+        wallet: user.wallet,
       });
     }
     return res.json({
