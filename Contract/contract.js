@@ -5,7 +5,7 @@ require("dotenv").config();
 
 class ClusterContract {
   constructor() {
-    this.provider = new ethers.providers.JsonRpcProvider(
+    this.provider = new ethers.JsonRpcProvider(
       `https://polygon-amoy.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
     );
     this.wallet = new ethers.Wallet(env.SERVER_PRIVATE_KEY);
@@ -32,7 +32,7 @@ class ClusterContract {
 
 class ClusterContractWS {
   constructor() {
-    this.websocketProvider = new ethers.providers.WebSocketProvider(
+    this.websocketProvider = new ethers.WebSocketProvider(
       `wss://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_WEBSOCKET_KEY}`
     );
     this.wallet = new ethers.Wallet(env.SERVER_PRIVATE_KEY);

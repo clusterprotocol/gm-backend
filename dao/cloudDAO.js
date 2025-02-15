@@ -2,7 +2,7 @@ const Deployment = require("../models/deployments");
 const shellHelper = require("../helpers/shellHelpers.js");
 
 class CloudDAO {
-  static generateYamlConfigNew(data) {
+  generateYamlConfigNew(data) {
     return `
 version: "1.0"
 
@@ -38,27 +38,28 @@ profiles:
               nvidia:
                 - model: ${data.gpuName}
   placement:
-    ${data.location}:
+    westcoast:
       attributes:
         region: ${data.location}
       pricing:
         py-cuda:
           token: CST
-          amount: ${data.amount + 1}
+          amount: ${data.amount}
 
 deployment:
   py-cuda:
-    ${data.location}:
+    westcoast:
       profile: py-cuda
       count: 1
   `;
   }
 
-  static async saveDeploymentToDB(deploymentId, data, deploymentResponse) {
+  async saveDeploymentToDB(deploymentId, data, deploymentResponse) {
     const deployment = new Deployment({
-      deploymentid: deploymentId,
-      dockerImage: data.image,
+      deploymentId: deploymentId,
+      dockerImage: data.imageId,
       duration: data.rentalDuration,
+      cloudProvider: data.cloudProvider,
       cpuname: data.name,
       gpuname: data.gpuName,
       cpuVRam: 20,
@@ -72,16 +73,16 @@ deployment:
       walletAddress: data.userAddress,
       data: deploymentResponse,
     });
-    return deployment.save();
+    return await deployment.save();
   }
 
-  static getOrdersByUserAddress(userAddress) {
-    return Deployment.find({ walletAddress: userAddress });
+  async getOrdersByUserAddress(userAddress) {
+    return await Deployment.find({ walletAddress: userAddress });
   }
 
-  static updateDeployment(deploymentId, updateData) {
-    return Deployment.findOneAndUpdate(
-      { deploymentid: deploymentId },
+  async updateDeployment(deploymentId, updateData) {
+    return await Deployment.findOneAndUpdate(
+      { deploymentId: deploymentId },
       updateData,
       {
         new: true,
@@ -89,10 +90,10 @@ deployment:
     );
   }
 
-  static updateDeploymentStatus(deploymentId, status) {
-    return Deployment.findOneAndUpdate(
-      { deploymentid: deploymentId },
-      { "data.status": status, status },
+  async updateDeploymentStatus(deploymentId, status) {
+    return await Deployment.findOneAndUpdate(
+      { deploymentId: deploymentId },
+      { status },
       { new: true }
     );
   }

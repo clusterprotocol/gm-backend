@@ -26,7 +26,7 @@ const apiKeyMiddleware = async (req, res, next) => {
       } else {
         // Token is valid, and we have the decoded payload
         console.log("Decoded JWT payload:", decoded);
-        req.body.userAddress = decoded;
+        req.body.userAddress = decoded.userAddress;
         next();
       }
     });

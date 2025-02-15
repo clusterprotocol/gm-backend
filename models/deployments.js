@@ -2,9 +2,10 @@
 const mongoose = require("mongoose");
 
 const deploymentSchema = new mongoose.Schema({
-  deploymentid: { type: Number, required: true },
+  deploymentId: { type: String, required: true },
   dockerImage: { type: String, required: true },
   duration: { type: String, required: true },
+  cloudProvider: { type: String, required: true },
   cpuname: { type: String },
   gpuname: { type: String },
   cpuVRam: { type: Number },
@@ -17,7 +18,7 @@ const deploymentSchema = new mongoose.Schema({
   bidprice: { type: Number },
   walletAddress: { type: String, required: true },
   status: { type: String, default: "Active" },
-  data: {type: Object},
+  data: { type: Object, default: {} },
   createdAt: { type: Date, default: Date.now },
 });
 

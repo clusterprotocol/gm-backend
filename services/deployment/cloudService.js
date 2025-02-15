@@ -124,8 +124,8 @@
 // };
 
 const { cloudConfig } = require("../../constants/cloudConfig.js");
-const SpheronServiceWrapper = require("./spheron/spheronServiceWrapper");
 const AwsService = require("./aws/AwsService");
+const SpheronService = require("./spheron/SpheronService.js");
 
 class CloudService {
   constructor(cloudProvider) {
@@ -136,7 +136,7 @@ class CloudService {
 
     switch (this.cloudProvider) {
       case "SPHERON":
-        this.cloudService = new SpheronServiceWrapper();
+        this.cloudService = new SpheronService();
 
         break;
       case "AWS":
@@ -193,6 +193,14 @@ class ServiceProvider extends CloudService {
 
   async fetchLeasesByState(walletAddress, options) {
     return await this.cloudService.fetchLeasesByState(walletAddress, options);
+  }
+
+  async getLogs(deploymentId) {
+    return await this.cloudService.getLogs(deploymentId);
+  }
+
+  async getEvents(deploymentId) {
+    return await this.cloudService.getEvents(deploymentId);
   }
 }
 

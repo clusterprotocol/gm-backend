@@ -28,16 +28,16 @@ const userRouter = express.Router();
 
 // Public routes
 userRouter.post("/register", userController.register);
+userRouter.post("/isUser", userController.isUser);
+userRouter.post("/userNameStatus", userController.userNameStatus);
 
 // Protected routes (API key middleware applied)
 userRouter.use(apiKeyMiddleware);
 
-userRouter.post("/isUser", userController.isUser);
 userRouter.post("/getUsdBalance", userController.getUsdBalance);
 userRouter.post("/getUsdAdds", userController.getUsdAdds);
 userRouter.post("/getUsdSpends", userController.getUsdSpends);
 userRouter.post("/getOrders", userController.getOrders);
-userRouter.post("/userNameStatus", userController.userNameStatus);
 userRouter.post("/getUsername", userController.getUsername);
 
 module.exports = userRouter;

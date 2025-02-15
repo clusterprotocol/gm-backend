@@ -3,7 +3,7 @@ version: "1.0"
 
 services:
   py-cuda:
-    image: quay.io/jupyter/pytorch-notebook:cuda12-pytorch-2.4.1
+    image: undefined
     expose:
       - port: 8080
         as: 8080
@@ -33,17 +33,17 @@ profiles:
               nvidia:
                 - model: rtx4090
   placement:
-    us-central:
+    westcoast:
       attributes:
-        region: us-central
+        region: us-east
       pricing:
         py-cuda:
           token: CST
-          amount: 2
+          amount: 0.27
 
 deployment:
   py-cuda:
-    us-central:
+    westcoast:
       profile: py-cuda
       count: 1
   

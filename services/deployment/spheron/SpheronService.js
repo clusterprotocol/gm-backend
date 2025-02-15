@@ -1,10 +1,17 @@
 const spheronClientPromise = require("../../../config/cloudConfigs/spheronConfig.js");
 const env = require("../../../config/env.js");
+const CloudDAO = require("../../../dao/cloudDAO.js");
 const fileUtils = require("../../../utils/fileUtils.js");
+const shellHelper = require("../../../helpers/shellHelpers.js");
+const axios = require("axios");
+const { cloudConfig } = require("../../../constants/cloudConfig.js");
+const CommonFunction = require("../../../Utils/commonFunctions.js");
 
 class SpheronService {
   constructor() {
     this.providerProxyUrl = env.PROVIDER_PROXY_URL;
+    this.cloudDAO = new CloudDAO();
+    this.commonFunctions = new CommonFunction();
   }
 
   async initializeClient() {
@@ -14,10 +21,13 @@ class SpheronService {
     return this.spheronClient;
   }
 
-  async deploy() {
+  async createDeployment(deploymentData) {
     console.log("Spheron deploy running");
+    const yamlConfig = this.cloudDAO.generateYamlConfigNew(deploymentData);
+    shellHelper.saveYaml("gpu.yml", yamlConfig);
     const spheronClient = await this.initializeClient();
     const fileContent = fileUtils.readGpuYml();
+    console.log("fileContent ", fileContent);
 
     try {
       const response = await spheronClient.client.deployment.createDeployment(
@@ -25,10 +35,19 @@ class SpheronService {
         this.providerProxyUrl
       );
       console.log("Deployment Creation ", response);
+      // ✅ Convert BigInt leaseId safely
+      const deploymentId = Number(response?.leaseId);
+      // ✅ Convert the entire response to remove BigInt values before saving to DB
+      const safeDeploymentResponse = JSON.parse(
+        JSON.stringify(response, (key, value) =>
+          typeof value === "bigint" ? Number(value) : value
+        )
+      );
       return {
         success: true,
         message: "Deployment initiated successfully.",
-        response,
+        response: safeDeploymentResponse,
+        deploymentId,
       };
     } catch (error) {
       console.log("error", error);
@@ -40,9 +59,9 @@ class SpheronService {
     }
   }
 
-  async getDeploymentDetails(deploymentId) {
+  async fetchDeploymentDetails(deploymentId) {
     try {
-      console.log("Spheron getDeploymentDetails ", deploymentId);
+      console.log("Spheron fetchDeploymentDetails ", deploymentId);
       const spheronClient = await this.initializeClient();
       const deploymentDetails =
         await spheronClient.client.deployment.getDeployment(
@@ -63,7 +82,7 @@ class SpheronService {
     }
   }
 
-  async closeDeployment(deploymentId) {
+  async terminateDeployment(deploymentId) {
     try {
       const spheronClient = await this.initializeClient();
       const response = await spheronClient.client.deployment.closeDeployment(
@@ -107,7 +126,7 @@ class SpheronService {
     }
   }
 
-  async getUserBalance(token, walletAddress) {
+  async fetchUserBalance(token, walletAddress) {
     try {
       const spheronClient = await this.initializeClient();
       const userBalance = await spheronClient.client.escrow.getUserBalance(
@@ -128,7 +147,7 @@ class SpheronService {
     }
   }
 
-  async depositBalance(token, amount) {
+  async saveDepositBalance(token, amount) {
     try {
       const spheronClient = await this.initializeClient();
       console.log("spheron deposit balance", token, amount);
@@ -174,7 +193,7 @@ class SpheronService {
     }
   }
 
-  async getLeaseDetails(leaseId) {
+  async fetchLeaseDetails(leaseId) {
     try {
       const spheronClient = await this.initializeClient();
       const leaseDetails = await spheronClient.client.leases.getLeaseDetails(
@@ -195,7 +214,7 @@ class SpheronService {
     }
   }
 
-  async closeLease(leaseId) {
+  async terminateLease(leaseId) {
     try {
       const spheronClient = await this.initializeClient();
       const response = await spheronClient.client.leases.closeLease(leaseId);
@@ -213,7 +232,7 @@ class SpheronService {
     }
   }
 
-  async getLeaseIds(walletAddress) {
+  async fetchLeaseIds(walletAddress) {
     try {
       // Wait for the spheronClient to be initialized
       const spheronClient = await this.initializeClient();
@@ -236,7 +255,7 @@ class SpheronService {
     }
   }
 
-  async getLeasesByState(walletAddress, options) {
+  async fetchLeasesByState(walletAddress, options) {
     try {
       // Wait for the spheronClient to be initialized
       const spheronClient = await this.initializeClient();
@@ -257,6 +276,94 @@ class SpheronService {
         error: error.message,
       };
     }
+  }
+
+  async fetchAvailableImages() {
+    const response = await axios.get(
+      "https://provider.spheron.network/api/gpu-prices"
+    );
+    const gpuImages = response.data;
+    const processedData = gpuImages.map((gpu) => ({
+      machineId: this.commonFunctions.generateRandomString(),
+      availableNum: gpu.availableNum,
+      cpuName: gpu.name,
+      gpuName: gpu.name,
+      portsOpen: [8080],
+      region: gpu.region,
+      bidPrice: gpu.averagePrice,
+      cloudProvider: cloudConfig.SPHERON,
+      instanceType: gpu.name,
+      vcpu: gpu.vcpu || 24,
+      memory: gpu.memory || 32,
+      storage: gpu.storage || 200,
+    }));
+    return processedData;
+  }
+
+  async getLogs(deploymentId) {
+    const command = `sphnctl deployment logs --lid ${deploymentId}`;
+
+    shellHelper.execCommand(command, async (code, stdout, stderr) => {
+      if (code !== 0) {
+        return { success: false, error: stderr };
+      }
+
+      try {
+        // Check if stdout is empty
+        if (stdout.trim() === "") {
+          // Update the order's data.status to 'Offline' in the database
+          await this.cloudDAO.updateDeploymentStatus(deploymentId, "offline");
+          return {
+            success: true,
+            message: `Logs for Deployment ID: ${deploymentId}`,
+            logs: stdout, // blank output
+            statusUpdated: "Offline",
+          };
+        } else {
+          return {
+            success: true,
+            message: `Logs for Deployment ID: ${deploymentId}`,
+            logs: stdout, // Assuming stdout contains structured data
+          };
+        }
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    });
+  }
+
+  async getEvents(deploymentId) {
+    console.log("spheron getLogs ", deploymentId);
+    const command = `sphnctl deployment events --lid ${deploymentId}`;
+
+    shellHelper.execCommand(command, async (code, stdout, stderr) => {
+      console.log(code, stdout, stderr);
+      if (code !== 0) {
+        return { success: false, error: stderr };
+      }
+
+      try {
+        // Check if stdout is empty
+        if (stdout.trim() === "") {
+          // Update the order's data.status to 'Offline' in the database
+          await this.cloudDAO.updateDeploymentStatus(deploymentId, "offline");
+          return {
+            success: true,
+            message: `Events for Deployment ID: ${deploymentId}`,
+            events: stdout, // blank output
+            statusUpdated: "Offline",
+          };
+        } else {
+          return {
+            success: true,
+            message: `Events for Deployment ID: ${deploymentId}`,
+            events: stdout, // Assuming stdout contains structured data
+          };
+        }
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    });
   }
 }
 

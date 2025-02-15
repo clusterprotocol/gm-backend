@@ -2,7 +2,6 @@ const UserService = require("../services/userServices.js");
 const ContractServices = require("../services/contractServices.js");
 
 class UserController {
-  constructor() {}
   async isUser(req, res) {
     try {
       const { userAddress } = req.body;
@@ -33,6 +32,7 @@ class UserController {
       const response = await UserService.getUsername(userAddress);
       res.json(response);
     } catch (error) {
+      console.log(error);
       res
         .status(500)
         .json({ success: false, message: "Internal Server Error" });
@@ -42,13 +42,16 @@ class UserController {
   async register(req, res) {
     try {
       const { name, userAddress, sshKey } = req.body;
+
       const response = await UserService.registerUser(
         name,
         userAddress,
         sshKey
       );
+      console.log("response resgister ", response);
       res.json(response);
     } catch (error) {
+      console.log(error);
       res
         .status(500)
         .json({ success: false, message: "Internal Server Error" });
@@ -58,7 +61,7 @@ class UserController {
   async getUsdBalance(req, res) {
     try {
       const { userAddress } = req.body;
-      const response = await ContractServices.getUsdBalance(userAddress);
+      const response = await UserService.getUsdBalance(userAddress);
       res.json(response);
     } catch (error) {
       res

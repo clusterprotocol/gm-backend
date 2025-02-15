@@ -5,12 +5,6 @@ class ContractServices {
     this.clusterContract = new ClusterContract();
   }
 
-  async getUsdBalance(userAddress) {
-    // Replace with actual contract logic if needed
-    // const usdBal = parseInt(await this.clusterContract.getUserBalnce(userAddress)) * (10**-6);
-    return { success: true, usdBalance: 0 };
-  }
-
   async getUsdAdds(userAddress) {
     const usdAdds = await this.clusterContract.getUsdAdds(userAddress);
     const parsedUsd = usdAdds.map((amount) => parseInt(amount) * 10 ** -6);

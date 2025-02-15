@@ -40,7 +40,7 @@ class UserService {
       };
     }
 
-    const newUser = await createUser({
+    const newUser = await UserDAO.createUser({
       name,
       userAddress,
       sshKey,
@@ -65,6 +65,11 @@ class UserService {
   async getUseAddress(userAddress) {
     const user = await UserDAO.findUserByAddress(userAddress);
     return { userAddress: user?.userAddress || null };
+  }
+
+  async getUsdBalance(userAddress) {
+    const user = await UserDAO.findUserByAddress(userAddress);
+    return { success: true, wallet: user.wallet };
   }
 }
 

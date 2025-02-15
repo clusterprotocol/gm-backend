@@ -3,6 +3,7 @@ const ContractDAO = require("../dao/contractDAO.js");
 const axios = require("axios");
 const { ClusterContract } = require("../Contract/contract.js");
 const orderDAO = require("../dao/orderDAO.js");
+const { cloudConfig } = require("../constants/cloudConfig.js");
 
 class MachineController {
   constructor() {
@@ -57,11 +58,11 @@ class MachineController {
         coreCount: 10,
         IPAddress: 1,
         portsOpen: [8080],
-        region: "us-east",
-        originalRegion: gpu.region,
+        region: gpu.region,
         bidPrice: gpu.averagePrice,
         isAvailable: 1,
         isListed: 1,
+        cloudProvider: cloudConfig.SPHERON,
       }));
 
       res.json(processedData);

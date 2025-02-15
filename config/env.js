@@ -14,6 +14,12 @@ const env = {
   AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY,
   AWS_SECRET_KEY: process.env.AWS_SECRET_KEY,
   AWS_REGION: process.env.AWS_REGION,
+  CHAIN_ID: process.env.CHAIN_ID,
+  RPC_URL: process.env.RPC_URL,
+  PRIVATE_KEY: process.env.PRIVATE_KEY,
+  ACCOUNT_ADDRESS: process.env.ACCOUNT_ADDRESS,
+  DEPLOYED_ADDRESS: process.env.DEPLOYED_ADDRESS,
+  AWS_LAMBDA_TERMINATEEC2INSTANCE: process.env.AWS_LAMBDA_TERMINATEEC2INSTANCE,
 };
 
 module.exports = env;

@@ -1,0 +1,277 @@
+{
+  "instances": [
+    {
+      "gpu_name": "H100",
+      "instance_type": "p5.48xlarge",
+      "hourly_price": 98.32,
+      "vcpu": 192,
+      "memory": "2048 GiB"
+    },
+    {
+      "gpu_name": "A100",
+      "instance_type": "p4d.24xlarge",
+      "hourly_price": 32.7726,
+      "vcpu": 96,
+      "memory": "1152 GiB"
+    },
+    {
+      "gpu_name": "L4",
+      "instance_type": "g6.xlarge",
+      "hourly_price": 0.8048,
+      "vcpu": 4,
+      "memory": "16 GiB"
+    },
+    {
+      "gpu_name": "L4",
+      "instance_type": "g6.2xlarge",
+      "hourly_price": 0.9776,
+      "vcpu": 8,
+      "memory": "32 GiB"
+    },
+    {
+      "gpu_name": "L4",
+      "instance_type": "g6.4xlarge",
+      "hourly_price": 1.3232,
+      "vcpu": 16,
+      "memory": "64 GiB"
+    },
+    {
+      "gpu_name": "L4",
+      "instance_type": "g6.8xlarge",
+      "hourly_price": 2.0144,
+      "vcpu": 32,
+      "memory": "128 GiB"
+    },
+    {
+      "gpu_name": "L4",
+      "instance_type": "g6.12xlarge",
+      "hourly_price": 4.6016,
+      "vcpu": 48,
+      "memory": "192 GiB"
+    },
+    {
+      "gpu_name": "L4",
+      "instance_type": "g6.16xlarge",
+      "hourly_price": 3.3968,
+      "vcpu": 64,
+      "memory": "256 GiB"
+    },
+    {
+      "gpu_name": "L4",
+      "instance_type": "g6.24xlarge",
+      "hourly_price": 6.6752,
+      "vcpu": 96,
+      "memory": "384 GiB"
+    },
+    {
+      "gpu_name": "L4",
+      "instance_type": "g6.48xlarge",
+      "hourly_price": 13.3504,
+      "vcpu": 192,
+      "memory": "768 GiB"
+    },
+    {
+      "gpu_name": "L40S",
+      "instance_type": "g6e.xlarge",
+      "hourly_price": 1.861,
+      "vcpu": 4,
+      "memory": "32 GiB"
+    },
+    {
+      "gpu_name": "L40S",
+      "instance_type": "g6e.2xlarge",
+      "hourly_price": 2.24208,
+      "vcpu": 8,
+      "memory": "64 GiB"
+    },
+    {
+      "gpu_name": "L40S",
+      "instance_type": "g6e.4xlarge",
+      "hourly_price": 3.00424,
+      "vcpu": 16,
+      "memory": "128 GiB"
+    },
+    {
+      "gpu_name": "L40S",
+      "instance_type": "g6e.8xlarge",
+      "hourly_price": 4.52856,
+      "vcpu": 32,
+      "memory": "256 GiB"
+    },
+    {
+      "gpu_name": "L40S",
+      "instance_type": "g6e.12xlarge",
+      "hourly_price": 10.49264,
+      "vcpu": 48,
+      "memory": "384 GiB"
+    },
+    {
+      "gpu_name": "L40S",
+      "instance_type": "g6e.16xlarge",
+      "hourly_price": 7.57719,
+      "vcpu": 64,
+      "memory": "512 GiB"
+    },
+    {
+      "gpu_name": "L40S",
+      "instance_type": "g6e.24xlarge",
+      "hourly_price": 15.06559,
+      "vcpu": 96,
+      "memory": "768 GiB"
+    },
+    {
+      "gpu_name": "L40S",
+      "instance_type": "g6e.48xlarge",
+      "hourly_price": 30.13118,
+      "vcpu": 192,
+      "memory": "1536 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5.xlarge",
+      "hourly_price": 1.006,
+      "vcpu": 4,
+      "memory": "16 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5.2xlarge",
+      "hourly_price": 1.212,
+      "vcpu": 8,
+      "memory": "32 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5.4xlarge",
+      "hourly_price": 1.624,
+      "vcpu": 16,
+      "memory": "64 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5.8xlarge",
+      "hourly_price": 2.448,
+      "vcpu": 32,
+      "memory": "128 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5.12xlarge",
+      "hourly_price": 5.672,
+      "vcpu": 48,
+      "memory": "192 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5.16xlarge",
+      "hourly_price": 4.096,
+      "vcpu": 64,
+      "memory": "256 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5.24xlarge",
+      "hourly_price": 8.144,
+      "vcpu": 96,
+      "memory": "384 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5.48xlarge",
+      "hourly_price": 16.288,
+      "vcpu": 192,
+      "memory": "768 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5g.xlarge",
+      "hourly_price": 0.42,
+      "vcpu": 4,
+      "memory": "8 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5g.2xlarge",
+      "hourly_price": 0.556,
+      "vcpu": 8,
+      "memory": "16 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5g.4xlarge",
+      "hourly_price": 0.828,
+      "vcpu": 16,
+      "memory": "32 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5g.8xlarge",
+      "hourly_price": 1.372,
+      "vcpu": 32,
+      "memory": "64 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5g.16xlarge",
+      "hourly_price": 2.744,
+      "vcpu": 64,
+      "memory": "128 GiB"
+    },
+    {
+      "gpu_name": "A10G",
+      "instance_type": "g5g.metal",
+      "hourly_price": 2.744,
+      "vcpu": 64,
+      "memory": "128 GiB"
+    },
+    {
+      "gpu_name": "T4",
+      "instance_type": "g4dn.xlarge",
+      "hourly_price": 0.526,
+      "vcpu": 0,
+      "memory": "4 GiB"
+    },
+    {
+      "gpu_name": "T4",
+      "instance_type": "g4dn.2xlarge",
+      "hourly_price": 0.752,
+      "vcpu": 8,
+      "memory": "32 GiB"
+    },
+    {
+      "gpu_name": "T4",
+      "instance_type": "g4dn.4xlarge",
+      "hourly_price": 1.204,
+      "vcpu": 16,
+      "memory": "64 GiB"
+    },
+    {
+      "gpu_name": "T4",
+      "instance_type": "g4dn.8xlarge",
+      "hourly_price": 2.176,
+      "vcpu": 32,
+      "memory": "128 GiB"
+    },
+    {
+      "gpu_name": "T4",
+      "instance_type": "g4dn.12xlarge",
+      "hourly_price": 3.912,
+      "vcpu": 48,
+      "memory": "192 GiB"
+    },
+    {
+      "gpu_name": "T4",
+      "instance_type": "g4dn.16xlarge",
+      "hourly_price": 4.352,
+      "vcpu": 64,
+      "memory": "256 GiB"
+    },
+    {
+      "gpu_name": "T2",
+      "instance_type": "t2.micro",
+      "hourly_price": 4.352,
+      "vcpu": 64,
+      "memory": "256 GiB"
+    }
+  ]
+}

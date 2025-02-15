@@ -6,6 +6,7 @@ const apiKeyRouter = require("./apiKeyRoutes.js");
 const apiKeyMiddleware = require("../middleware/auth/apiKeyMiddleWare.js");
 const cloudRouter = require("./cloudRoutes.js");
 const userRouter = require("./userRoutes.js");
+const gpuBillingRouter = require("./gpuBillingRoutes.js");
 
 // Public routes
 router.use("/user", userRouter);
@@ -22,5 +23,6 @@ router.get("/status", (req, res) => {
 router.use("/apikey", apiKeyRouter);
 router.use("/machine", machineRouter);
 router.use("/cloud", cloudRouter);
+router.use("/gpuBilling", gpuBillingRouter);
 
 module.exports = router;
