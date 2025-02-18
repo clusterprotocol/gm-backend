@@ -179,6 +179,12 @@ class CloudController {
 
         // 🛠️ Step 5: Calculate Remaining Amount
         const durationLeft = deploymentData.duration - deploymentRunningTime;
+        console.log(
+          " deploymentData.duration - deploymentRunningTime",
+          deploymentData.duration,
+          deploymentRunningTime,
+          durationLeft
+        );
         const remainingAmount = durationLeft * deploymentData.bidprice;
 
         if (remainingAmount < 0) {
@@ -196,7 +202,9 @@ class CloudController {
               .json({ success: false, message: "User not found" });
           }
 
-          let previousBalance = user.wallet?.balance || 0;
+          let previousBalance = JSON.parse(
+            JSON.stringify(user.wallet?.balance)
+          );
           let finalBalance = previousBalance + remainingAmount;
           user.wallet.balance = finalBalance;
           await user.save();

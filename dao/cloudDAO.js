@@ -69,7 +69,7 @@ deployment:
       ipAddr: "192.168.0.1",
       openedPorts: [data.port],
       region: data.location,
-      bidprice: data.amount,
+      bidprice: data.bidPrice,
       deductionCost: data.deductionCost,
       walletAddress: data.userAddress,
       data: deploymentResponse,

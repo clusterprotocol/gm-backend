@@ -13,7 +13,7 @@ services:
       - JUPYTER_TOKEN=sentient
 profiles:
   name: py-cuda
-  duration: 28224h
+  duration: 3456h
   mode: provider
   tier:
     - community
@@ -31,15 +31,15 @@ profiles:
           attributes:
             vendor:
               nvidia:
-                - model: rtx4090
+                - model: t1000
   placement:
     westcoast:
       attributes:
-        region: us-east
+        region: us-central
       pricing:
         py-cuda:
           token: CST
-          amount: 45.36
+          amount: 8.64
 
 deployment:
   py-cuda:
