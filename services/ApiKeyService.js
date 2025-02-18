@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const ApiKeyDAO = require("../dao/ApiKeyDAO");
+const ApiKeyDAO = require("../dao/apiKeyDAO.js");
 
 class ApiKeyService {
   // Generate or retrieve an API key for a user
