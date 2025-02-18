@@ -15,12 +15,13 @@ class AwsConfig {
     this.cloudWatchLogs = new AWS.CloudWatchLogs(this.awsConfig);
     this.ssm = new AWS.SSM(this.awsConfig);
     this.eventBridge = new AWS.EventBridge(this.awsConfig);
+    this.iam = new AWS.IAM(this.awsConfig); // Added IAM Client
   }
 
   async getAccountId() {
-    const sts = new AWS.STS();
-    const identity = await sts.getCallerIdentity().promise();
-    return identity.Account;
+    // const sts = new AWS.STS();
+    // const identity = await sts.getCallerIdentity().promise();
+    return "575108942815"; //identity.Account;
   }
 
   getEC2Client() {
@@ -37,6 +38,10 @@ class AwsConfig {
 
   getEventBridgeClient() {
     return this.eventBridge;
+  }
+
+  getIAMClient() {
+    return this.iam; // Added IAM client getter
   }
 }
 

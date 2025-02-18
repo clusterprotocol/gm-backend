@@ -1,16 +1,17 @@
+const env = require("../config/env");
+
 require("@nomicfoundation/hardhat-toolbox");
-require("dotenv").config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: "0.8.20",
   networks: {
     hardhat: {
-      chainId: 31337,
+      chainId: 11155111,
     },
-    // sepolia: {
-    //   url: process.env.RPC_URL,
-    //   accounts: [process.env.PRIVATE_KEY],
-    // },
+    sepolia: {
+      url: env.RPC_URL,
+      accounts: [env.PRIVATE_KEY],
+    },
   },
 };

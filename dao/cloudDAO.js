@@ -70,6 +70,7 @@ deployment:
       openedPorts: [data.port],
       region: data.location,
       bidprice: data.amount,
+      deductionCost: data.deductionCost,
       walletAddress: data.userAddress,
       data: deploymentResponse,
     });

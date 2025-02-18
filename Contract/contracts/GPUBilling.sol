@@ -8,6 +8,10 @@ interface IERC20 {
         uint256 amount
     ) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
 }
 
 contract GPUBilling {
@@ -22,6 +26,7 @@ contract GPUBilling {
     }
 
     mapping(address => TokenInfo) public allowedTokens;
+    address[] public tokenList;
 
     enum TransactionType {
         CREDIT,
@@ -62,6 +67,20 @@ contract GPUBilling {
     );
     event TokenRemoved(address token);
 
+    event BalanceSubtracted(
+        address indexed user,
+        uint256 amount,
+        string transactionId,
+        address token
+    );
+
+    event BalanceAdded(
+        address indexed user,
+        uint256 amount,
+        string transactionId,
+        address token
+    );
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the owner");
         _;
@@ -79,11 +98,21 @@ contract GPUBilling {
         string memory imageURL
     ) external onlyOwner {
         allowedTokens[token] = TokenInfo(true, name, symbol, imageURL);
+        tokenList.push(token);
         emit TokenAdded(token, name, symbol, imageURL);
     }
 
     function removeAllowedToken(address token) external onlyOwner {
         delete allowedTokens[token];
+
+        for (uint256 i = 0; i < tokenList.length; i++) {
+            if (tokenList[i] == token) {
+                tokenList[i] = tokenList[tokenList.length - 1]; // Swap with last element
+                tokenList.pop(); // Remove last element
+                break;
+            }
+        }
+
         emit TokenRemoved(token);
     }
 
@@ -120,6 +149,9 @@ contract GPUBilling {
         require(amount > 0, "Deposit amount must be greater than zero");
 
         IERC20(token).transferFrom(msg.sender, address(this), amount);
+        balances[msg.sender][token] += amount;
+
+        // IERC20(token).transferFrom(msg.sender, address(this), amount);
         string memory transactionId = generateTransactionId();
 
         transactions[msg.sender].push(
@@ -131,7 +163,6 @@ contract GPUBilling {
                 token
             )
         );
-        balances[msg.sender][token] += amount;
 
         emit Deposited(msg.sender, amount, transactionId, token);
     }
@@ -155,18 +186,6 @@ contract GPUBilling {
         );
 
         emit Withdrawn(msg.sender, amount, transactionId, token);
-
-        // Log withdrawal transaction separately
-        string memory withdrawTransactionId = generateTransactionId();
-        transactions[msg.sender].push(
-            Transaction(
-                withdrawTransactionId,
-                amount,
-                block.timestamp,
-                TransactionType.WITHDRAW,
-                token
-            )
-        );
     }
 
     function getTransactions(
@@ -181,7 +200,93 @@ contract GPUBilling {
             amount > 0 && IERC20(token).balanceOf(address(this)) >= amount,
             "Invalid amount"
         );
-        IERC20(token).transferFrom(address(this), owner, amount);
+        // IERC20(token).transferFrom(address(this), owner, amount);
+
+        bool success = IERC20(token).transfer(owner, amount);
+        require(success, "Transfer failed");
         emit OwnerWithdrawn(owner, amount);
+    }
+
+    function getOwnerBalance(
+        address token
+    ) external view onlyOwner returns (uint256) {
+        return IERC20(token).balanceOf(address(this));
+    }
+
+    function getUserBalances(
+        address user
+    ) external view returns (address[] memory, uint256[] memory) {
+        uint256 length = tokenList.length;
+        uint256[] memory userBalances = new uint256[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            userBalances[i] = balances[user][tokenList[i]];
+        }
+
+        return (tokenList, userBalances);
+    }
+
+    function getAllTokens()
+        external
+        view
+        returns (address[] memory, TokenInfo[] memory)
+    {
+        uint256 length = tokenList.length;
+        TokenInfo[] memory tokens = new TokenInfo[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            tokens[i] = allowedTokens[tokenList[i]];
+        }
+
+        return (tokenList, tokens);
+    }
+
+    function subtractUserBalance(
+        address user,
+        address token,
+        uint256 amount
+    ) external onlyOwner {
+        require(allowedTokens[token].allowed, "Token not allowed");
+        require(amount > 0, "Amount must be greater than zero");
+        require(balances[user][token] >= amount, "Insufficient balance");
+
+        balances[user][token] -= amount;
+
+        string memory transactionId = generateTransactionId();
+        transactions[user].push(
+            Transaction(
+                transactionId,
+                amount,
+                block.timestamp,
+                TransactionType.DEBIT,
+                token
+            )
+        );
+
+        emit BalanceSubtracted(user, amount, transactionId, token);
+    }
+
+    function addUserBalance(
+        address user,
+        address token,
+        uint256 amount
+    ) external onlyOwner {
+        require(allowedTokens[token].allowed, "Token not allowed");
+        require(amount > 0, "Amount must be greater than zero");
+
+        balances[user][token] += amount;
+
+        string memory transactionId = generateTransactionId();
+        transactions[user].push(
+            Transaction(
+                transactionId,
+                amount,
+                block.timestamp,
+                TransactionType.CREDIT,
+                token
+            )
+        );
+
+        emit BalanceAdded(user, amount, transactionId, token);
     }
 }

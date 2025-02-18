@@ -20,6 +20,16 @@ const deploymentSchema = new mongoose.Schema({
   status: { type: String, default: "Active" },
   data: { type: Object, default: {} },
   createdAt: { type: Date, default: Date.now },
+  deductionCost: {
+    type: Object,
+    default: {
+      totalCost: 0,
+      fromWallet: 0,
+      fromAccount: 0,
+      tokenAddress: "",
+      refund: 0,
+    },
+  },
 });
 
 module.exports = mongoose.model("Deployment", deploymentSchema);

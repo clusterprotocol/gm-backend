@@ -4,89 +4,242 @@ const CloudService = require("../services/deployment/cloudService.js");
 const userDAO = require("../dao/userDAO.js");
 const transactionDAO = require("../dao/transactionDAO.js");
 const { cloudConfig } = require("../constants/cloudConfig.js");
+const GPUBillingService = require("../services/gpuBillingService.js");
+const ethers = require("ethers");
 
 class CloudController {
   constructor() {
     this.cloudDAO = new CloudDAO();
     this.userDAO = userDAO;
     this.transactionDAO = transactionDAO;
+    this.gpuBillingService = new GPUBillingService();
   }
 
   async createDeployment(req, res) {
     try {
+      // 🛠️ Step 1: Validate Input
       const deploymentData = req.body;
+      const tokenAddress = deploymentData?.deductionCost?.tokenAddress;
+      if (
+        !deploymentData.userAddress ||
+        !deploymentData.deductionCost ||
+        !tokenAddress
+      ) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Missing required fields" });
+      }
+
       const userAddress = deploymentData.userAddress;
+      const totalDeductionCost = parseFloat(
+        deploymentData.deductionCost.totalDeduction
+      );
+
+      if (isNaN(totalDeductionCost) || totalDeductionCost <= 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid deduction cost" });
+      }
+
+      // 🛠️ Step 2: Fetch & Validate User
+      const user = await this.userDAO.findUserByAddress(userAddress);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      // 🛠️ Step 3: Deduct Balance Safely
+      let previousBalance = user.wallet?.balance || 0; // Default to 0 if balance is undefined
+      if (previousBalance < totalDeductionCost) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Insufficient balance" });
+      }
+
+      let finalBalance = previousBalance - totalDeductionCost;
+      user.wallet.balance = finalBalance;
+
+      // 🛠️ Step 4: Cloud Deployment API Call
       const cloudService = new CloudService(deploymentData.cloudProvider);
       const deploymentResponse = await cloudService.createDeployment(
         deploymentData
       );
-      // const deploymentResponse = {
-      //   success: true,
-      //   response: {
-      //     leaseId: 2954n,
-      //     transaction: {
-      //       to: "0x1fdf629E5A90eE4FAab1336a23c41A0Cab8CbA9d",
-      //       from: "0x6Cd6cC3e99269A7673dFF872c5267A8b0EA3Ac7C",
-      //       contractAddress: null,
-      //       hash: "0x1dd4e00f455605e72485acee3ce03effb1778988428e3ebaf9666f7cc6fbf77e",
-      //       index: 47,
-      //       blockHash:
-      //         "0x43e0233aee2c1a9baef3c10870b32b2028de9047f82171b43246ec12fc5589cb",
-      //       blockNumber: 21873619,
-      //       logsBloom:
-      //         "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000002",
-      //       gasUsed: 464968n,
-      //       blobGasUsed: null,
-      //       cumulativeGasUsed: 8541123n,
-      //       gasPrice: 1000430n,
-      //       blobGasPrice: null,
-      //       type: 2,
-      //       status: 1,
-      //       root: undefined,
-      //     },
-      //   },
-      // };
-      console.log("deploymentResponse", deploymentResponse);
+
       if (!deploymentResponse.success) {
         return res
           .status(500)
           .json({ success: false, error: deploymentResponse.message });
       }
 
+      // 🛠️ Step 5: Save Deployment in Database
       const deployment = await this.cloudDAO.saveDeploymentToDB(
         deploymentResponse.deploymentId,
         deploymentData,
         deploymentResponse.response
       );
 
-      const user = await this.userDAO.findUserByAddress(userAddress);
-      let previousBalance = JSON.parse(JSON.stringify(user.wallet.balance));
-      console.log(
-        "previousBalance",
-        user.wallet.balance,
-        deploymentData.amount
-      );
-      let finalBalance = user.wallet.balance - deploymentData.amount; // Subtract money
-      user.wallet.balance = finalBalance;
-      console.log("finalBalance", user.wallet.balance);
       await user.save();
 
+      const substractUserBalance =
+        await this.gpuBillingService.subtractUserBalance(
+          userAddress,
+          tokenAddress,
+          totalDeductionCost
+        );
+
+      // 🛠️ Step 6: Save Transaction
       await transactionDAO.createTransaction({
         userAddress,
-        amount: deploymentData.amount,
+        amount: totalDeductionCost,
         deploymentId: deploymentResponse.deploymentId,
         type: "debit",
         previousBalance,
         finalBalance,
+        deductionCost: deploymentData.deductionCost,
+        message: "Token deducted on deployment",
+        txHash: substractUserBalance.txHash,
       });
 
+      console.log("substracting amount from contract wallet");
+
+      // 🛠️ Step 7: Success Response
       res.status(201).json({
         success: true,
         message: "Deployment created successfully",
         deployment,
       });
     } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      console.error("Error in createDeployment:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  async terminateDeployment(req, res) {
+    try {
+      // 🛠️ Step 1: Validate Inputs
+      const { deploymentId, cloudProvider, userAddress, deductionCost } =
+        req.body;
+
+      if (
+        !deploymentId ||
+        !cloudProvider ||
+        !userAddress ||
+        deductionCost === undefined
+      ) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Missing required fields" });
+      }
+
+      console.log("Terminating Deployment:", deploymentId, cloudProvider);
+      const cloudService = new CloudService(cloudProvider);
+
+      // 🛠️ Step 2: Cloud Termination API Call
+      const cloudTerminateResponse = await cloudService.terminateDeployment(
+        deploymentId
+      );
+      console.log("Cloud Termination Response:", cloudTerminateResponse);
+
+      if (!cloudTerminateResponse.success) {
+        return res.status(500).json({
+          success: false,
+          message: `Deployment ID: ${deploymentId} failed to close. Error: ${cloudTerminateResponse.message}`,
+        });
+      }
+
+      // 🛠️ Step 3: Update Deployment Status
+      const deploymentData = await this.cloudDAO.updateDeploymentStatus(
+        deploymentId,
+        "offline"
+      );
+
+      if (!deploymentData) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Deployment not found in DB" });
+      }
+
+      // 🛠️ Step 4: Check if Deployment Was Active
+      const deploymentStartTime = new Date(deploymentData.createdAt).getTime();
+      const currentTime = Date.now();
+      const deploymentRunningTime =
+        (currentTime - deploymentStartTime) / 3600000; // Convert ms to hours
+
+      const isDeploymentActive =
+        deploymentRunningTime < deploymentData.duration;
+
+      console.log("Deployment Running Time (hrs):", deploymentRunningTime);
+      console.log("Is Deployment Still Active?:", isDeploymentActive);
+
+      if (isDeploymentActive) {
+        console.log("Deployment is still active. Calculating refund...");
+
+        // 🛠️ Step 5: Calculate Remaining Amount
+        const durationLeft = deploymentData.duration - deploymentRunningTime;
+        const remainingAmount = durationLeft * deploymentData.bidprice;
+
+        if (remainingAmount < 0) {
+          console.log(
+            "No refund required as deployment time is fully utilized."
+          );
+        } else {
+          console.log("Remaining Amount to be Credited:", remainingAmount);
+
+          // 🛠️ Step 6: Fetch User & Validate
+          const user = await this.userDAO.findUserByAddress(userAddress);
+          if (!user) {
+            return res
+              .status(404)
+              .json({ success: false, message: "User not found" });
+          }
+
+          let previousBalance = user.wallet?.balance || 0;
+          let finalBalance = previousBalance + remainingAmount;
+          user.wallet.balance = finalBalance;
+          await user.save();
+
+          console.log(`User's New Balance: ${finalBalance}`);
+
+          console.log("Deducting initial deployment cost...", deductionCost);
+          const tokenAddress = deductionCost.tokenAddress.trim(); // Remove any accidental spaces
+          const formattedTokenAddress = ethers.getAddress(tokenAddress);
+
+          // 🛠️ Step 8: Deduct Initial Deployment Cost (If Needed)
+          console.log(userAddress, formattedTokenAddress, remainingAmount);
+          const addUserBalance = await this.gpuBillingService.addUserBalance(
+            userAddress,
+            formattedTokenAddress,
+            remainingAmount
+          );
+          console.log("User Balance Deducted:", addUserBalance);
+
+          // 🛠️ Step 7: Create Credit Transaction
+          await this.transactionDAO.createTransaction({
+            userAddress,
+            amount: remainingAmount,
+            deploymentId,
+            type: "credit",
+            previousBalance,
+            finalBalance,
+            deductionCost: { refund: remainingAmount },
+            txHash: addUserBalance.txHash,
+          });
+        }
+      }
+
+      // 🛠️ Step 9: Return Success Response
+      return res.status(200).json({
+        success: true,
+        message: `Deployment ID: ${deploymentId} closed successfully.`,
+      });
+    } catch (error) {
+      console.error("Error in terminateDeployment:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -112,83 +265,6 @@ class CloudController {
         message: `Deployment ID: ${deploymentId} updated successfully.`,
         updatedDeployment,
       });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  }
-
-  async terminateDeployment(req, res) {
-    try {
-      const { deploymentId, cloudProvider, userAddress } = req.body;
-      console.log("teminatedeployment ", deploymentId, cloudProvider);
-      const cloudService = new CloudService(cloudProvider);
-      const cloudTerminateResponse = await cloudService.terminateDeployment(
-        deploymentId
-      );
-      console.log("cloudTerminateResponse ", cloudTerminateResponse);
-      if (cloudTerminateResponse.success) {
-        const deploymentData = await this.cloudDAO.updateDeploymentStatus(
-          deploymentId,
-          "offline"
-        );
-        // checking for deplyment is active or not
-        const deploymentRunningTime =
-          Date.now() / 3600000 -
-          new Date(deploymentData.createdAt).getTime() / 3600000;
-
-        const isDeploymentActive =
-          deploymentRunningTime < deploymentData.duration; //converting hour into milisec for comaprision
-
-        console.log(isDeploymentActive);
-
-        if (isDeploymentActive) {
-          console.log("Deployment is still active.");
-
-          //caculating remaining amount
-          const remainingAmount =
-            (deploymentData.duration - deploymentRunningTime) *
-            deploymentData.bidprice;
-
-          console.log("remainingAmount ", remainingAmount);
-
-          // console.log(
-          //   "remainingAmount",
-          //   deploymentData.duration,
-          //   deploymentRunningTime,
-          //   deploymentData.duration - deploymentRunningTime,
-          //   remainingAmount
-          // );
-
-          // adding amount to user wallet
-          const user = await this.userDAO.findUserByAddress(userAddress);
-          let previousBalance = JSON.parse(JSON.stringify(user.wallet.balance));
-          console.log("previousBalance", user.wallet.balance);
-          let finalBalance = user.wallet.balance + remainingAmount;
-          user.wallet.balance = finalBalance;
-          console.log("finalBalance", user.wallet.balance);
-          await user.save();
-
-          // creating a credit transaction
-          await this.transactionDAO.createTransaction({
-            userAddress,
-            amount: remainingAmount,
-            deploymentId,
-            type: "credit",
-            previousBalance,
-            finalBalance,
-          });
-        }
-
-        return res.status(200).json({
-          success: true,
-          message: `Deployment ID: ${deploymentId} closed successfully.`,
-        });
-      } else {
-        return res.status(500).json({
-          success: false,
-          message: `Deployment ID: ${deploymentId} failed to close.`,
-        });
-      }
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -404,6 +480,7 @@ class CloudController {
         status: order.status,
         statusDetails: order.data || {},
         cloudProvider: order.cloudProvider,
+        deductionCost: order.deductionCost,
       }));
 
       return res.status(200).json({
