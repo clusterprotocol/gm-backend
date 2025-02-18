@@ -24,7 +24,7 @@ jobs:
         run: |
           ssh ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           cd /home/ubuntu/gm-backend
-          git pull origin Gm-Backend-CI/CD
+          git pull origin integrating-spheron-sdk
           npm install
           ./start-server.sh # Add this line to run your bash script
           EOF
