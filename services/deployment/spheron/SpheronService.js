@@ -1,7 +1,7 @@
 const spheronClientPromise = require("../../../config/cloudConfigs/spheronConfig.js");
 const env = require("../../../config/env.js");
 const CloudDAO = require("../../../dao/cloudDAO.js");
-const fileUtils = require("../../../utils/fileUtils.js");
+const fileUtils = require("../../../Utils/fileUtils.js");
 const shellHelper = require("../../../helpers/shellHelpers.js");
 const axios = require("axios");
 const { cloudConfig } = require("../../../constants/cloudConfig.js");
