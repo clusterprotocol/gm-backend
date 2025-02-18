@@ -1,0 +1,30 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - Gm-Backend-CI/CD 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        run: |
+          ssh ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          cd /home/ubuntu/gm-backend
+          git pull origin Gm-Backend-CI/CD
+          npm install
+          ./path/to/your-script.sh # Add this line to run your bash script
+          EOF
