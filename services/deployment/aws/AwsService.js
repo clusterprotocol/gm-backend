@@ -2,6 +2,7 @@ const AwsConfig = require("../../../config/cloudConfigs/awsConfig");
 const env = require("../../../config/env");
 const { cloudConfig } = require("../../../constants/cloudConfig");
 const CommonFunction = require("../../../Utils/commonFunctions");
+const ContainerService = require("../../containerServices/containerServices");
 const awsAvailableImages = require("./awsAvailableImages.json");
 
 // **Wrapper Class to Rename Functions**
@@ -12,13 +13,43 @@ class AwsService {
     this.awsSsm = AwsConfig.getSSMClient();
     this.accountId = AwsConfig.getAccountId();
     this.eventBridge = AwsConfig.getEventBridgeClient();
-    this.imageId = "ami-04b4f1a9cf54c11d0";
+    this.imageId = "ami-037606826db251f82";
+    this.securityGroupIds = ["sg-03308e6c4d569b20c"];
     this.commonFunctions = new CommonFunction();
     this.awsRegion = env.AWS_REGION;
+    this.containerService = new ContainerService();
+  }
+
+  async getPublicIp(deploymentId) {
+    try {
+      const params = { InstanceIds: [deploymentId] };
+      const response = await this.awsService
+        .describeInstances(params)
+        .promise();
+
+      const instance = response.Reservations?.[0]?.Instances?.[0];
+      if (!instance) {
+        throw new Error(`Instance ${deploymentId} not found`);
+      }
+
+      const publicIp = instance.PublicIpAddress;
+      return publicIp;
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
   async getInstanceArn(instanceId) {
     return `arn:aws:ec2:${this.awsRegion}:${this.accountId}:instance/${instanceId}`;
+  }
+
+  async getAmiIdByName(amiName) {
+    const params = {
+      Filters: [{ Name: "name", Values: [amiName] }],
+    };
+    const result = await this.awsService.describeImages(params).promise();
+    console.log("ami id ", result);
+    return result.Images.length > 0 ? result.Images[0].ImageId : null;
   }
 
   async listImages(params = {}) {
@@ -155,17 +186,7 @@ class AwsService {
 
   async createDeployment(deploymentData) {
     try {
-      const { imageId, instanceType, keyName, securityGroupIds } =
-        deploymentData;
-
-      console.log(
-        "imageId, instanceType, keyName, securityGroupIds ",
-        imageId,
-        instanceType,
-        keyName,
-        securityGroupIds,
-        deploymentData
-      );
+      const { imageId, instanceType, keyName } = deploymentData;
 
       if (!imageId || !instanceType) {
         return {
@@ -174,137 +195,41 @@ class AwsService {
         };
       }
 
-      // const params = {
-      //   ImageId: this.imageId, // e.g., "ami-1234567890abcdef0"
-      //   InstanceType: instanceType, // e.g., "t2.micro"
-      //   MinCount: 1,
-      //   MaxCount: 1,
-      //   KeyName: keyName, // Optional: Name of your EC2 key pair
-      //   SecurityGroupIds: securityGroupIds, // Optional: Array of security group IDs
-      // };
+      const roleName = "TerminateEc2Instance";
+      const params = {
+        ImageId: this.imageId, // Hardcoded AMI ID
+        InstanceType: instanceType,
+        MinCount: 1,
+        MaxCount: 1,
+        KeyName: keyName,
+        SecurityGroupIds: this.securityGroupIds,
+        IamInstanceProfile: { Name: roleName }, // Ensure IAM role is assigned
+        InstanceInitiatedShutdownBehavior: "terminate",
+        TagSpecifications: [
+          {
+            ResourceType: "instance",
+            Tags: [
+              {
+                Key: "Name",
+                Value: `UserGeneratedFromGpuMarketplace-${this.commonFunctions.generateRandomString()}`,
+              },
+            ],
+          },
+        ],
+      };
 
-      try {
-        // const data = await this.awsService.runInstances(params).promise();
-        // const instanceId = data.Instances[0].InstanceId;
+      console.log("params ", params);
 
-        // await this.enableCloudWatchLogs(instanceId);
-        // const data = {};
-        // const instanceId = "i-079fe8120c147ada2";
-        const roleName = "TerminateEc2Instance";
+      const data = await this.awsService.runInstances(params).promise();
+      const instanceId = data.Instances[0].InstanceId;
 
-        // const attachIam = await this.addIAMRoleToInstance(instanceId, roleName);
-        // if (!attachIam.success) {
-        //   return {
-        //     success: false,
-        //     message: "Deployment failed.",
-        //     error: error.message,
-        //   };
-        // }
-
-        // const scheduler = await this.scheduleTermination(instanceId, 3);
-        // if (!scheduler.success) {
-        //   return {
-        //     success: false,
-        //     message: "Deployment failed.",
-        //     error: error.message,
-        //   };
-        // }
-
-        const terminationTime = "2025-02-17T12:45:00Z";
-        const instanceName = "aghjdashjd";
-
-        const userData = `#!/bin/bash
-        LOG_FILE="/home/ubuntu/termination-check.log"
-        SCRIPT_PATH="/home/ubuntu/termination-check.sh"
-        
-        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - Script started" | tee -a $LOG_FILE
-        
-        INSTANCE_NAME="${instanceName}"
-        TERMINATION_TIME="${terminationTime}"
-        
-        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - Termination Time set to: $TERMINATION_TIME" | tee -a $LOG_FILE
-        
-        # Create the termination script
-        cat << 'EOF' > $SCRIPT_PATH
-        #!/bin/bash
-        LOG_FILE="/home/ubuntu/termination-check.log"
-        
-        log_message() {
-            echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - $1" | tee -a $LOG_FILE
-        }
-        
-        log_message "Termination Script Running"
-        
-        INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${instanceName}" --query 'Reservations[0].Instances[0].InstanceId' --output text)
-        TERMINATION_TIME="${terminationTime}"
-        
-        while true; do
-            CURRENT_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-            log_message "Checking Termination Condition. Current Time: $CURRENT_TIME"
-        
-            if [[ "$CURRENT_TIME" > "$TERMINATION_TIME" ]]; then
-                log_message "Terminating Instance: $INSTANCE_ID"
-                aws ec2 terminate-instances --instance-ids $INSTANCE_ID
-                break
-            fi
-            sleep 1
-        done
-        EOF
-        
-        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - Termination script created" | tee -a $LOG_FILE
-        
-        # Set permissions
-        chmod +x $SCRIPT_PATH
-        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - Script permissions set to executable" | tee -a $LOG_FILE
-        
-        # Check if AWS CLI is installed
-        if ! command -v aws &> /dev/null; then
-            echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - AWS CLI not found, installing..." | tee -a $LOG_FILE
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-            echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - AWS CLI installed" | tee -a $LOG_FILE
-        fi
-        
-        # Start script in background with nohup
-        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - Starting termination script in background" | tee -a $LOG_FILE
-        nohup bash $SCRIPT_PATH > /dev/null 2>&1 & 
-        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - Termination script started in background" | tee -a $LOG_FILE
-        `;
-
-        const params = {
-          ImageId: this.imageId, // Hardcoded AMI ID
-          InstanceType: instanceType,
-          MinCount: 1,
-          MaxCount: 1,
-          KeyName: keyName,
-          SecurityGroupIds: securityGroupIds,
-          UserData: Buffer.from(userData).toString("base64"),
-          IamInstanceProfile: { Name: roleName }, // Ensure IAM role is assigned
-          TagSpecifications: [
-            {
-              ResourceType: "instance",
-              Tags: [
-                { Key: "termination_time", Value: terminationTime },
-                { Key: "name", Value: instanceName },
-              ],
-            },
-          ],
-        };
-
-        const data = await this.awsService.runInstances(params).promise();
-        const instanceId = data.Instances[0].InstanceId;
-
-        return {
-          success: true,
-          message: "Instance launched successfully",
-          instanceId: "true",
-          response: data,
-          deploymentId: instanceId,
-        };
-      } catch (error) {
-        return { success: false, error: error.message };
-      }
+      return {
+        success: true,
+        message: "Instance launched successfully",
+        instanceId: "true",
+        response: data,
+        deploymentId: instanceId,
+      };
     } catch (error) {
       console.log(error);
       return {
@@ -456,32 +381,59 @@ class AwsService {
     }
   }
 
-  async getLogs(logStreamName, logGroupName = "/var/log/instance-logs") {
+  async getLogs(data) {
     try {
-      const data1 = await this.cloudWatchLogs.describeLogGroups().promise();
-      console.log(
-        "Available Log Groups:",
-        data1.logGroups.map((g) => g.logGroupName)
+      const publicIp = await this.getPublicIp(data.deploymentId);
+      const containerId = data.containerId;
+      const logs = await this.containerService.getContainerLogs(
+        publicIp,
+        containerId
       );
-      const params = {
-        logGroupName,
-        logStreamName,
-      };
 
-      console.log("aws log params ", params);
+      console.log("instance ", logs);
 
-      const data = await this.cloudWatchLogs.getLogEvents(params).promise();
-      console.log("aws logs ", data);
-      return {
-        success: true,
-        logs: data.events.map((event) => ({
-          timestamp: new Date(event.timestamp).toISOString(),
-          message: event.message,
-        })),
-      };
+      return { success: true, logs };
+      // const data1 = await this.cloudWatchLogs.describeLogGroups().promise();
+      // console.log(
+      //   "Available Log Groups:",
+      //   data1.logGroups.map((g) => g.logGroupName)
+      // );
+      // const params = {
+      //   logGroupName,
+      //   logStreamName,
+      // };
+
+      // console.log("aws log params ", params);
+
+      // const data = await this.cloudWatchLogs.getLogEvents(params).promise();
+      // console.log("aws logs ", data);
+      // return {
+      //   success: true,
+      //   logs: data.events.map((event) => ({
+      //     timestamp: new Date(event.timestamp).toISOString(),
+      //     message: event.message,
+      //   })),
+      // };
     } catch (error) {
       console.error("Error fetching logs:", error);
-      return { success: false, error: error.message };
+      throw new Error(error.message);
+    }
+  }
+
+  async initiateContainerServices(deployment) {
+    try {
+      const publicIp = await this.getPublicIp(deployment.deploymentId);
+      const startingDocker = await this.containerService.initSSH(
+        publicIp,
+        deployment
+      );
+
+      console.log("instance ", startingDocker);
+
+      return startingDocker;
+    } catch (error) {
+      console.error("Error fetching public IP:", error);
+      throw new Error(error.message);
     }
   }
 }

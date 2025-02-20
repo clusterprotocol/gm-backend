@@ -10,6 +10,10 @@ class CommonFunction {
     }
     return result;
   }
+
+  async waitForSeconds(seconds) {
+    await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+  }
 }
 
 module.exports = CommonFunction;

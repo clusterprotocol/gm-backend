@@ -6,12 +6,14 @@ const shellHelper = require("../../../helpers/shellHelpers.js");
 const axios = require("axios");
 const { cloudConfig } = require("../../../constants/cloudConfig.js");
 const CommonFunction = require("../../../Utils/commonFunctions.js");
+const ContainerService = require("../../containerServices/containerServices.js");
 
 class SpheronService {
   constructor() {
     this.providerProxyUrl = env.PROVIDER_PROXY_URL;
     this.cloudDAO = new CloudDAO();
     this.commonFunctions = new CommonFunction();
+    this.containerService = new ContainerService();
   }
 
   async initializeClient() {
@@ -300,36 +302,37 @@ class SpheronService {
     return processedData;
   }
 
-  async getLogs(deploymentId) {
-    const command = `sphnctl deployment logs --lid ${deploymentId}`;
+  async getLogs(data) {
+    try {
+      // const containerId = data.containerId;
+      // const logs = await this.containerService.getContainerLogs(containerId);
 
-    shellHelper.execCommand(command, async (code, stdout, stderr) => {
-      if (code !== 0) {
-        return { success: false, error: stderr };
-      }
+      // console.log("instance ", logs);
 
-      try {
-        // Check if stdout is empty
-        if (stdout.trim() === "") {
-          // Update the order's data.status to 'Offline' in the database
-          await this.cloudDAO.updateDeploymentStatus(deploymentId, "offline");
-          return {
-            success: true,
-            message: `Logs for Deployment ID: ${deploymentId}`,
-            logs: stdout, // blank output
-            statusUpdated: "Offline",
-          };
-        } else {
-          return {
-            success: true,
-            message: `Logs for Deployment ID: ${deploymentId}`,
-            logs: stdout, // Assuming stdout contains structured data
-          };
+      // return { success: true, logs };
+      // const command = `sphnctl deployment logs --lid ${deploymentId}`;
+
+      shellHelper.execCommand(command, async (code, stdout, stderr) => {
+        if (code !== 0) {
+          return { success: false, error: stderr };
         }
-      } catch (err) {
-        return { success: false, error: err.message };
-      }
-    });
+
+        try {
+          // Check if stdout is empty
+          if (stdout.trim() === "") {
+            // Update the order's data.status to 'Offline' in the database
+            await this.cloudDAO.updateDeploymentStatus(deploymentId, "offline");
+            return stdout;
+          } else {
+            return stdout;
+          }
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      });
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
   async getEvents(deploymentId) {
@@ -364,6 +367,31 @@ class SpheronService {
         return { success: false, error: err.message };
       }
     });
+  }
+
+  async initiateContainerServices(deployment) {
+    try {
+      const deploymentData =
+        await spheronClient.client.deployment.getDeployment(
+          deployment.deploymentId
+        );
+      const publicIp = deploymentData?.services?.[0]?.expose?.[0]?.publicIp;
+      if (!publicIp) {
+        throw new Error(`Instance ${deployment.deploymentId} not found`);
+      }
+
+      const startingDocker = await this.containerService.initSSH(
+        publicIp,
+        deployment
+      );
+
+      console.log("instance ", startingDocker);
+
+      return startingDocker;
+    } catch (error) {
+      console.error("Error fetching public IP:", error);
+      throw new Error(error.message);
+    }
   }
 }
 

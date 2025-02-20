@@ -195,12 +195,16 @@ class ServiceProvider extends CloudService {
     return await this.cloudService.fetchLeasesByState(walletAddress, options);
   }
 
-  async getLogs(deploymentId) {
-    return await this.cloudService.getLogs(deploymentId);
+  async getLogs(data) {
+    return await this.cloudService.getLogs(data);
   }
 
   async getEvents(deploymentId) {
     return await this.cloudService.getEvents(deploymentId);
+  }
+
+  async initiateContainerServices(deployment) {
+    return await this.cloudService.initiateContainerServices(deployment);
   }
 }
 

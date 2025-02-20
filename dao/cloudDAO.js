@@ -3,17 +3,27 @@ const shellHelper = require("../helpers/shellHelpers.js");
 
 class CloudDAO {
   generateYamlConfigNew(data) {
+    const exposedPorts = data.port
+      .map((port) =>
+        Object.entries(port).map(
+          ([container, host]) => `
+        - port: ${container}
+          as: ${host}
+          to:
+            - global: true
+  `
+        )
+      )
+      .join("\n");
+
     return `
 version: "1.0"
 
 services:
   py-cuda:
-    image: ${data.image}
+    image: ${data.imageId}
     expose:
-      - port: ${data.port}
-        as: ${data.port}
-        to:
-          - global: true
+      ${exposedPorts}
     env:
       - JUPYTER_TOKEN=sentient
 profiles:
@@ -67,7 +77,7 @@ deployment:
       memorySize: 100,
       coreCount: 1,
       ipAddr: "192.168.0.1",
-      openedPorts: [data.port],
+      openedPorts: data.port,
       region: data.location,
       bidprice: data.bidPrice,
       deductionCost: data.deductionCost,
@@ -75,6 +85,14 @@ deployment:
       data: deploymentResponse,
     });
     return await deployment.save();
+  }
+
+  async addContainerData(deploymentId, data) {
+    return await Deployment.findOneAndUpdate(
+      { deploymentId: deploymentId },
+      { $set: data },
+      { new: true }
+    );
   }
 
   async getOrdersByUserAddress(userAddress) {

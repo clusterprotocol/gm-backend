@@ -3,17 +3,25 @@ version: "1.0"
 
 services:
   py-cuda:
-    image: undefined
+    image: jenkins/jenkins:lts
     expose:
-      - port: 8080
-        as: 8080
-        to:
-          - global: true
+      
+        - port: 8080
+          as: 8080
+          to:
+            - global: true
+  
+
+        - port: 1212
+          as: 1212
+          to:
+            - global: true
+  
     env:
       - JUPYTER_TOKEN=sentient
 profiles:
   name: py-cuda
-  duration: 3456h
+  duration: 1h
   mode: provider
   tier:
     - community
@@ -31,15 +39,15 @@ profiles:
           attributes:
             vendor:
               nvidia:
-                - model: t1000
+                - model: rtx6000-ada
   placement:
     westcoast:
       attributes:
-        region: us-central
+        region: us-west
       pricing:
         py-cuda:
           token: CST
-          amount: 8.64
+          amount: 0.95
 
 deployment:
   py-cuda:

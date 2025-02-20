@@ -30,6 +30,7 @@ const deploymentSchema = new mongoose.Schema({
       refund: 0,
     },
   },
+  containerData: { type: Object, default: {} },
 });
 
 module.exports = mongoose.model("Deployment", deploymentSchema);
