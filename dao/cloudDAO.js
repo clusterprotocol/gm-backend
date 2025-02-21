@@ -7,10 +7,10 @@ class CloudDAO {
       .map((port) =>
         Object.entries(port).map(
           ([container, host]) => `
-        - port: ${container}
-          as: ${host}
-          to:
-            - global: true
+      - port: ${container}
+        as: ${host}
+        to:
+          - global: true
   `
         )
       )
@@ -70,6 +70,7 @@ deployment:
       dockerImage: data.imageId,
       duration: data.rentalDuration,
       cloudProvider: data.cloudProvider,
+      name: data.name,
       cpuname: data.name,
       gpuname: data.gpuName,
       cpuVRam: 20,
@@ -83,6 +84,8 @@ deployment:
       deductionCost: data.deductionCost,
       walletAddress: data.userAddress,
       data: deploymentResponse,
+      env: data.env,
+      publicKey: data.publicKey,
     });
     return await deployment.save();
   }
@@ -97,6 +100,10 @@ deployment:
 
   async getOrdersByUserAddress(userAddress) {
     return await Deployment.find({ walletAddress: userAddress });
+  }
+
+  async getOrderByDeployementId(deploymentId) {
+    return await Deployment.findOne({ deploymentId });
   }
 
   async updateDeployment(deploymentId, updateData) {

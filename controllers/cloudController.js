@@ -23,6 +23,7 @@ class CloudController {
     try {
       // 🛠️ Step 1: Validate Input
       const deploymentData = req.body;
+      console.log(deploymentData);
       const tokenAddress = deploymentData?.deductionCost?.tokenAddress;
       if (
         !deploymentData.userAddress ||
@@ -136,22 +137,27 @@ class CloudController {
       //   __v: 0,
       // };
 
-      //this delay is required to start instance completely.
-      await this.commonFunction.waitForSeconds(13);
+      if (deploymentData.cloudProvider === cloudConfig.AWS) {
+        //this delay is required to start instance completely.
+        console.log(new Date());
+        await this.commonFunction.waitForSeconds(13);
 
-      const startingDocker = await cloudService.initiateContainerServices(
-        deployment
-      );
+        console.log(new Date());
 
-      if (startingDocker?.error) {
-        throw new Error(startingDocker.error);
+        const startingDocker = await cloudService.initiateContainerServices(
+          deployment
+        );
+
+        if (startingDocker?.error) {
+          throw new Error(startingDocker.error);
+        }
+
+        await this.cloudDAO.addContainerData(deployment.deploymentId, {
+          containerData: startingDocker,
+        });
+
+        console.log("startingDocker ", startingDocker);
       }
-
-      await this.cloudDAO.addContainerData(deployment.deploymentId, {
-        containerData: startingDocker,
-      });
-
-      console.log("startingDocker ", startingDocker);
 
       // 🛠️ Step 7: Success Response
       res.status(201).json({
@@ -536,7 +542,7 @@ class CloudController {
         port: order.openedPorts[0],
         amount: order.bidprice,
         status: order.status,
-        // statusDetails: order.data || {},
+        data: order.data || {},
         cloudProvider: order.cloudProvider,
         deductionCost: order.deductionCost,
         containerData: order.containerData,
@@ -568,16 +574,8 @@ class CloudController {
         });
       }
 
-      // let data = {
-      //   deploymentId: "i-0672a5babaebe2f10",
-      //   containerId:
-      //     "9cefe8b3542e40b240e90f431ce6a7671a7666290a4891fbb51c67e167c6bde9",
-      // };
-
       const cloudService = new CloudService(cloudProvider);
       const logs = await cloudService.getLogs(logData);
-      // const logs =
-      //   'Running from: /usr/share/jenkins/jenkins.war\r\nwebroot: /var/jenkins_home/war\r\n2025-02-20 06:00:33.501+0000 [id=1]\tINFO\twinstone.Logger#logInternal: Beginning extraction from war file\r\n2025-02-20 06:00:34.279+0000 [id=1]\tWARNING\to.e.j.ee9.nested.ContextHandler#setContextPath: Empty contextPath\r\n2025-02-20 06:00:34.338+0000 [id=1]\tINFO\torg.eclipse.jetty.server.Server#doStart: jetty-12.0.16; built: 2024-12-09T21:02:54.535Z; git: c3f88bafb4e393f23204dc14dc57b042e84debc7; jvm 17.0.14+7\r\n2025-02-20 06:00:34.831+0000 [id=1]\tINFO\to.e.j.e.w.StandardDescriptorProcessor#visitServlet: NO JSP Support for /, did not find org.eclipse.jetty.ee9.jsp.JettyJspServlet\r\n2025-02-20 06:00:34.882+0000 [id=1]\tINFO\to.e.j.s.DefaultSessionIdManager#doStart: Session workerName=node0\r\n2025-02-20 06:00:35.402+0000 [id=1]\tINFO\thudson.WebAppMain#contextInitialized: Jenkins home directory: /var/jenkins_home found at: EnvVars.masterEnvVars.get("JENKINS_HOME")\r\n2025-02-20 06:00:35.541+0000 [id=1]\tINFO\to.e.j.s.handler.ContextHandler#doStart: Started oeje9n.ContextHandler$CoreContextHandler@63411512{Jenkins v2.492.1,/,b=file:///var/jenkins_home/war/,a=AVAILABLE,h=oeje9n.ContextHandler$CoreContextHandler$CoreToNestedHandler@35cd68d4{STARTED}}\r\n2025-02-20 06:00:35.564+0000 [id=1]\tINFO\to.e.j.server.AbstractConnector#doStart: Started ServerConnector@4d192aef{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}\r\n2025-02-20 06:00:35.585+0000 [id=1]\tINFO\torg.eclipse.jetty.server.Server#doStart: Started oejs.Server@5b444398{STARTING}[12.0.16,sto=0] @2689ms\r\n2025-02-20 06:00:35.586+0000 [id=25]\tINFO\twinstone.Logger#logInternal: Winstone Servlet Engine running: controlPort=disabled\r\n2025-02-20 06:00:35.755+0000 [id=24]\tINFO\tjenkins.model.Jenkins#<init>: Starting version 2.492.1\r\n2025-02-20 06:00:35.846+0000 [id=33]\tINFO\tjenkins.InitReactorRunner$1#onAttained: Started initialization\r\n2025-02-20 06:00:35.862+0000 [id=35]\tINFO\tjenkins.InitReactorRunner$1#onAttained: Listed all plugins\r\n2025-02-20 06:00:36.973+0000 [id=37]\tINFO\tjenkins.InitReactorRunner$1#onAttained: Prepared all plugins\r\n2025-02-20 06:00:36.978+0000 [id=36]\tINFO\tjenkins.InitReactorRunner$1#onAttained: Started all plugins\r\n2025-02-20 06:00:36.980+0000 [id=34]\tINFO\tjenkins.InitReactorRunner$1#onAttained: Augmented all extensions\r\n2025-02-20 06:00:37.225+0000 [id=38]\tINFO\tjenkins.InitReactorRunner$1#onAttained: System config loaded\r\n2025-02-20 06:00:37.227+0000 [id=33]\tINFO\tjenkins.InitReactorRunner$1#onAttained: System config adapted\r\n2025-02-20 06:00:37.227+0000 [id=33]\tINFO\tjenkins.InitReactorRunner$1#onAttained: Loaded all jobs\r\n2025-02-20 06:00:37.229+0000 [id=33]\tINFO\tjenkins.InitReactorRunner$1#onAttained: Configuration for all jobs updated\r\n2025-02-20 06:00:37.273+0000 [id=51]\tINFO\thudson.util.Retrier#start: Attempt #1 to do the action check updates server\r\n2025-02-20 06:00:37.720+0000 [id=31]\tINFO\tjenkins.install.SetupWizard#init: \r\n\r\n*************************************************************\r\n*************************************************************\r\n*************************************************************\r\n\r\nJenkins initial setup is required. An admin user has been created and a password generated.\r\nPlease use the following password to proceed to installation:\r\n\r\nfa64353af13048f39c5e7c4b33fcec1e\r\n\r\nThis may also be found at: /var/jenkins_home/secrets/initialAdminPassword\r\n\r\n*************************************************************\r\n*************************************************************\r\n*************************************************************\r\n\r\n2025-02-20 06:00:42.556+0000 [id=31]\tINFO\tjenkins.InitReactorRunner$1#onAttained: Completed initialization\r\n2025-02-20 06:00:42.580+0000 [id=24]\tINFO\thudson.lifecycle.Lifecycle#onReady: Jenkins is fully up and running\r\n2025-02-20 06:00:44.546+0000 [id=51]\tINFO\th.m.DownloadService$Downloadable#load: Obtained the updated data file for hudson.tasks.Maven.MavenInstaller\r\n2025-02-20 06:00:44.547+0000 [id=51]\tINFO\thudson.util.Retrier#start: Performed the action check updates server successfully at the attempt #1\r\n';
       return res.status(200).json({
         success: true,
         logs,
@@ -606,8 +604,36 @@ class CloudController {
 
       const cloudService = new CloudService(cloudProvider);
       const events = await cloudService.getEvents(deploymentId);
+      console.log("events ", events);
+      res.status(200).json(events);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch events",
+        error: error.message,
+      });
+    }
+  }
 
-      return res.status(200).json({ success: true, events });
+  async fetchConnectionData(req, res) {
+    try {
+      const { deploymentId, cloudProvider } = req.body;
+
+      if (!deploymentId || !cloudProvider) {
+        res.status(500).json({
+          success: false,
+          message: "Deployment Id is required",
+          error: error.message,
+        });
+      }
+
+      const cloudService = new CloudService(cloudProvider);
+      const connectionData = await cloudService.fetchConnectionData(
+        deploymentId
+      );
+
+      return res.status(200).json({ success: true, connectionData });
     } catch (error) {
       console.error("Error fetching events:", error);
       return res.status(500).json({

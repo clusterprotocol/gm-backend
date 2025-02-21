@@ -6,15 +6,19 @@ class ContainerService {
   }
 
   formatData(data) {
+    const env = data.env?.flatMap((env) =>
+      Object.entries(env)?.map(([key, value]) => `${key}=${value}`)
+    );
     const formattedData = {
       docker_image: data.dockerImage,
       order_id: data.deploymentId,
-      username: "user4",
-      public_key: "",
-      provide_pubkey: false,
+      username: data.name,
+      public_key: data.publicKey || "",
+      provide_pubkey: !!data.publicKey,
       order_duration: `${data.duration}h`,
       timestamp: new Date(data.createdAt).getTime(),
-      ports: data.port,
+      ports: data.openedPorts,
+      env,
     };
 
     return formattedData;
@@ -28,7 +32,7 @@ class ContainerService {
       console.log("formattedData ", formattedData);
 
       const response = await axios.post(`${baseURL}/init_ssh`, formattedData);
-      return response.data;
+      return { ...response.data, params: formattedData };
     } catch (error) {
       return { error: error.response ? error.response.data : error.message };
     }

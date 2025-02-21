@@ -3,4 +3,10 @@ const cloudConfig = {
   AWS: "AWS",
 };
 
-module.exports = { cloudConfig };
+const renameCloudProvider = {
+  AWS: "Next-Gen GPU",
+  "Next-Gen GPU": "AWS",
+  SPHERON: "SPHERON",
+};
+
+module.exports = { cloudConfig, renameCloudProvider };

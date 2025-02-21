@@ -6,16 +6,10 @@ services:
     image: jenkins/jenkins:lts
     expose:
       
-        - port: 8080
-          as: 8080
-          to:
-            - global: true
-  
-
-        - port: 1212
-          as: 1212
-          to:
-            - global: true
+      - port: 8080
+        as: 8080
+        to:
+          - global: true
   
     env:
       - JUPYTER_TOKEN=sentient
@@ -47,7 +41,7 @@ profiles:
       pricing:
         py-cuda:
           token: CST
-          amount: 0.95
+          amount: 1.85
 
 deployment:
   py-cuda:

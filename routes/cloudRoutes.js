@@ -53,4 +53,8 @@ cloudRouter.post("/getEvents", (req, res) =>
   cloudController.getEvents(req, res)
 );
 
+cloudRouter.post("/fetchConnectionData", (req, res) =>
+  cloudController.fetchConnectionData(req, res)
+);
+
 module.exports = cloudRouter;

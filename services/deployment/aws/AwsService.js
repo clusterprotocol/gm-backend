@@ -1,6 +1,7 @@
 const AwsConfig = require("../../../config/cloudConfigs/awsConfig");
 const env = require("../../../config/env");
 const { cloudConfig } = require("../../../constants/cloudConfig");
+const CloudDAO = require("../../../dao/cloudDAO");
 const CommonFunction = require("../../../Utils/commonFunctions");
 const ContainerService = require("../../containerServices/containerServices");
 const awsAvailableImages = require("./awsAvailableImages.json");
@@ -18,6 +19,7 @@ class AwsService {
     this.commonFunctions = new CommonFunction();
     this.awsRegion = env.AWS_REGION;
     this.containerService = new ContainerService();
+    this.cloudDAO = new CloudDAO();
   }
 
   async getPublicIp(deploymentId) {
@@ -232,9 +234,10 @@ class AwsService {
       };
     } catch (error) {
       console.log(error);
+      const errorMessage = `Deployment Failed.\n\nPossible reasons:\n• Try increasing the bid price.\n• Choose another GPU with better availability.\n• Try again after some time.`;
       return {
         success: false,
-        message: "Deployment failed.",
+        message: errorMessage,
         error: error.message,
       };
     }
@@ -433,6 +436,18 @@ class AwsService {
       return startingDocker;
     } catch (error) {
       console.error("Error fetching public IP:", error);
+      throw new Error(error.message);
+    }
+  }
+
+  async fetchConnectionData(deploymentId) {
+    try {
+      // const publicIp = await this.getPublicIp(deploymentId);
+      const order = await this.cloudDAO.getOrderByDeployementId(deploymentId);
+      console.log(order.containerData, order);
+      return { ...order.containerData };
+    } catch (error) {
+      console.error("Error fetching connection data:", error);
       throw new Error(error.message);
     }
   }
