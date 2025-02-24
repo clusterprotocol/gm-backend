@@ -151,7 +151,7 @@ class CloudController {
       if (deploymentData.cloudProvider === cloudConfig.AWS) {
         //this delay is required to start instance completely.
         console.log(new Date());
-        await this.commonFunction.waitForSeconds(45);
+        await this.commonFunction.waitForSeconds(40);
 
         console.log(new Date());
 
