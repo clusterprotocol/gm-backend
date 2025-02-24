@@ -15,22 +15,6 @@
       "gpuArchitecture": "NVIDIA A10G",
       "videoMemoryGiB": 24,
       "gpuComputeCapability": 8.6
-    },
-    {
-      "gpu_name": "T3",
-      "instance_type": "t3.medium",
-      "hourly_price": 0.0416,
-      "instanceType": "t3.medium",
-      "ondemand": 1,
-      "spot": 1,
-      "ondemandPricePerHour": 0.0416,
-      "spotPricePerHour": 0.0104,
-      "vcpu": 2,
-      "memory": 4,
-      "memoryPerVCPU": 2,
-      "gpuArchitecture": "None",
-      "videoMemoryGiB": 0,
-      "gpuComputeCapability": 0
     }
   ]
 }

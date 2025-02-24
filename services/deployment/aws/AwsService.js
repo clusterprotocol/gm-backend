@@ -14,7 +14,7 @@ class AwsService {
     this.awsSsm = AwsConfig.getSSMClient();
     this.accountId = AwsConfig.getAccountId();
     this.eventBridge = AwsConfig.getEventBridgeClient();
-    this.imageId = "ami-0e0d2a2b98b7233fb";
+    this.imageId = "ami-01696c9154e69968f";
     this.securityGroupIds = ["sg-03308e6c4d569b20c"];
     this.commonFunctions = new CommonFunction();
     this.awsRegion = env.AWS_REGION;
