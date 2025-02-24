@@ -33,15 +33,15 @@ profiles:
           attributes:
             vendor:
               nvidia:
-                - model: rtx6000-ada
+                - model: t1000
   placement:
     westcoast:
       attributes:
-        region: us-west
+        region: dev-spheron
       pricing:
         py-cuda:
           token: CST
-          amount: 1.85
+          amount: 0.04
 
 deployment:
   py-cuda:

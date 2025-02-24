@@ -88,12 +88,12 @@ class CloudController {
 
       await user.save();
 
-      const substractUserBalance =
-        await this.gpuBillingService.subtractUserBalance(
-          userAddress,
-          tokenAddress,
-          totalDeductionCost
-        );
+      // const substractUserBalance =
+      //   await this.gpuBillingService.subtractUserBalance(
+      //     userAddress,
+      //     tokenAddress,
+      //     totalDeductionCost
+      //   );
 
       // 🛠️ Step 6: Save Transaction
       await transactionDAO.createTransaction({
@@ -105,42 +105,53 @@ class CloudController {
         finalBalance,
         deductionCost: deploymentData.deductionCost,
         message: "Token deducted on deployment",
-        txHash: substractUserBalance.txHash,
+        txHash: "", //substractUserBalance.txHash,
       });
 
       // console.log("substracting amount from contract wallet");
 
       // const deployment = {
-      //   deploymentId: "i-0672a5babaebe2f10",
+      //   deploymentId: "i-086f76b2f7b59cb93",
       //   dockerImage: "jenkins/jenkins:lts",
       //   duration: "1",
+      //   name: "XYX_XRS9ADQCRR",
       //   cloudProvider: "AWS",
-      //   cpuname: "XYX_5VUCCGR4X8",
-      //   gpuname: "T2",
+      //   cpuname: "XYX_XRS9ADQCRR",
+      //   gpuname: "A10G",
       //   cpuVRam: 20,
       //   totalRam: 20,
       //   memorySize: "100",
       //   coreCount: 1,
       //   ipAddr: "192.168.0.1",
-      //   openedPorts: [8080],
-      //   region: "us-east-1",
-      //   bidprice: 4.352,
+      //   openedPorts: [{ 8080: 8080 }],
+      //   region: "ap-south-1",
+      //   bidprice: 1.208,
       //   walletAddress: "0x3E0314C782F4885cB15cf36Dd6D6097E0314FE21",
       //   status: "Active",
+      //   data: {
+      //     Groups: [],
+      //     Instances: [[Object]],
+      //     OwnerId: "575108942815",
+      //     ReservationId: "r-02fd9ad2f06ba11ec",
+      //   },
+      //   env: [{ jwt: "secret" }],
+      //   publicKey:
+      //     "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDXlcHv5TdkJ8SSRwv9nvsiEtCmxRb7Fyfr4UfEWUo+d7Cd2/mGPd6sAgboumoCGewNJWCW/ahJiKSEX8M22NtLBcw4mmsk4x4A4V+47/CA+rlbL5QiJIWak6aBfI3TYwa4aktGpQWmhzizDKOuXPE7pmYhRoWrqotig/05TIdVvZ28S8YRL8a3eOBYVbTgUYWGletKTd1mKzqBOMhYq86+5Ol/c4ybDZlW92b6Uyz2M+ppwgW5TCcTB29XJPEkwschy5ffFw7yu02b32hwFONYygEzVb9WFEi9qfX+ktQCJ5YTbmHZOA6+v+RvVAq/B9KUE+yUQ7vTk5yvM3kzD4r8/7iRvUHiFzCSG0JAUZHuBSVLiUFcGqHbB2LwQGx55WqlfYtNQPCt3eNPY1a9LzbxrechWKOs//jlinwgq1cquSZuv2PCRml5tX/kDN0hKUSAhlL/c9GiwQd/1rhqm7SfczaZ9XLqxKRVGJbb6SzP3fYt2a8J6HYlN1ZfqVQx5+z4uVWY+QLjmlYgxckmEhdBNR69V76OYifHwFS3rFazqOVpDjXcJRTHnx/IANR/1p511j4SW3BLKoXZ+eJJyouN4OMVHM41uCH2wf9WC/eTWbBM8P52T4mcEepvVFUbc938k7UJRRRS7klaPm0E7nx45qJ/P/boUYItME9slZGEcQ== snarayan1603@gmail.com",
       //   deductionCost: {
-      //     fromWallet: 26.112000000000002,
+      //     fromWallet: 1.208,
       //     fromAccount: 0,
-      //     totalDeduction: 26.112000000000002,
+      //     totalDeduction: 1.208,
       //     tokenAddress: "0xb72dBB3fd3ADAbB603029F08E41d0Efae1Ba22DE",
       //   },
-      //   createdAt: "2025-02-18T14:27:25.920Z",
+
+      //   createdAt: "2025-02-24T08:53:24.948Z",
       //   __v: 0,
       // };
 
       if (deploymentData.cloudProvider === cloudConfig.AWS) {
         //this delay is required to start instance completely.
         console.log(new Date());
-        await this.commonFunction.waitForSeconds(13);
+        await this.commonFunction.waitForSeconds(45);
 
         console.log(new Date());
 

@@ -14,7 +14,7 @@ class AwsService {
     this.awsSsm = AwsConfig.getSSMClient();
     this.accountId = AwsConfig.getAccountId();
     this.eventBridge = AwsConfig.getEventBridgeClient();
-    this.imageId = "ami-037606826db251f82";
+    this.imageId = "ami-0e0d2a2b98b7233fb";
     this.securityGroupIds = ["sg-03308e6c4d569b20c"];
     this.commonFunctions = new CommonFunction();
     this.awsRegion = env.AWS_REGION;
@@ -253,7 +253,7 @@ class AwsService {
     };
 
     try {
-      const data = await ec2.describeInstances(params).promise();
+      const data = await this.awsService.describeInstances(params).promise();
       if (data.Reservations.length === 0) {
         return { success: false, error: "No instance found with this ID." };
       }
@@ -395,43 +395,60 @@ class AwsService {
 
       console.log("instance ", logs);
 
-      return { success: true, logs };
-      // const data1 = await this.cloudWatchLogs.describeLogGroups().promise();
-      // console.log(
-      //   "Available Log Groups:",
-      //   data1.logGroups.map((g) => g.logGroupName)
-      // );
-      // const params = {
-      //   logGroupName,
-      //   logStreamName,
-      // };
-
-      // console.log("aws log params ", params);
-
-      // const data = await this.cloudWatchLogs.getLogEvents(params).promise();
-      // console.log("aws logs ", data);
-      // return {
-      //   success: true,
-      //   logs: data.events.map((event) => ({
-      //     timestamp: new Date(event.timestamp).toISOString(),
-      //     message: event.message,
-      //   })),
-      // };
+      return logs;
     } catch (error) {
       console.error("Error fetching logs:", error);
       throw new Error(error.message);
     }
   }
 
+  async checkInstanceStatus() {}
+
   async initiateContainerServices(deployment) {
     try {
-      const publicIp = await this.getPublicIp(deployment.deploymentId);
-      const startingDocker = await this.containerService.initSSH(
-        publicIp,
-        deployment
-      );
+      let instanceStatus = "pending";
 
-      console.log("instance ", startingDocker);
+      while (instanceStatus === "pending") {
+        try {
+          await this.commonFunctions.waitForSeconds(5);
+
+          const instanceDetails = await this.fetchDeploymentDetails(
+            deployment.deploymentId
+          );
+          console.log(instanceDetails);
+          if (instanceDetails.success) {
+            instanceStatus = "started";
+            break;
+          }
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      }
+
+      const publicIp = await this.getPublicIp(deployment.deploymentId);
+
+      let isConnectionError = true,
+        maxTry = 5,
+        currentTry = 1,
+        startingDocker = null;
+
+      while (isConnectionError && currentTry < maxTry) {
+        startingDocker = await this.containerService.initSSH(
+          publicIp,
+          deployment
+        );
+        console.log("instance ", startingDocker);
+
+        if (
+          startingDocker?.error &&
+          startingDocker?.error === `connect ECONNREFUSED ${publicIp}:6666`
+        ) {
+          await this.commonFunctions.waitForSeconds(5);
+          currentTry++;
+        } else {
+          break;
+        }
+      }
 
       return startingDocker;
     } catch (error) {
@@ -442,10 +459,10 @@ class AwsService {
 
   async fetchConnectionData(deploymentId) {
     try {
-      // const publicIp = await this.getPublicIp(deploymentId);
+      const publicIp = await this.getPublicIp(deploymentId);
       const order = await this.cloudDAO.getOrderByDeployementId(deploymentId);
       console.log(order.containerData, order);
-      return { ...order.containerData };
+      return { ...order.containerData, publicIp };
     } catch (error) {
       console.error("Error fetching connection data:", error);
       throw new Error(error.message);
