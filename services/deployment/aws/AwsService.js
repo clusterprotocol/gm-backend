@@ -332,7 +332,7 @@ class AwsService {
 
     try {
       const data = await this.awsService.terminateInstances(params).promise();
-      console.log("terminateDeployment ", data);
+
       return {
         success: true,
         message: "Instance stopping...",
