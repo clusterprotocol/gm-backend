@@ -210,18 +210,18 @@ class CloudController {
       );
       console.log("Cloud Termination Response:", cloudTerminateResponse);
 
+      // 🛠️ Step 3: Update Deployment Status
+      const deploymentData = await this.cloudDAO.updateDeploymentStatus(
+        deploymentId,
+        "offline"
+      );
+
       if (!cloudTerminateResponse.success) {
         return res.status(500).json({
           success: false,
           message: `Deployment ID: ${deploymentId} failed to close. Error: ${cloudTerminateResponse.message}`,
         });
       }
-
-      // 🛠️ Step 3: Update Deployment Status
-      const deploymentData = await this.cloudDAO.updateDeploymentStatus(
-        deploymentId,
-        "offline"
-      );
 
       if (!deploymentData) {
         return res
