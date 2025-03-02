@@ -331,7 +331,7 @@ class AwsService {
     const params = { InstanceIds: [instanceId] };
 
     try {
-      const data = await this.awsService.stopInstances(params).promise();
+      const data = await this.awsService.terminateInstances(params).promise();
       return {
         success: true,
         message: "Instance stopping...",
