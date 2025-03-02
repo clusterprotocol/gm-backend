@@ -105,7 +105,7 @@ class CloudController {
         finalBalance,
         deductionCost: deploymentData.deductionCost,
         message: "Token deducted on deployment",
-        txHash: substractUserBalance?.txHash || "",
+        txHash: "", //substractUserBalance?.txHash ||
       });
 
       // console.log("substracting amount from contract wallet");
@@ -300,7 +300,7 @@ class CloudController {
             previousBalance,
             finalBalance,
             deductionCost: { refund: remainingAmount },
-            txHash: addUserBalance?.txHash || "",
+            txHash: "", //addUserBalance?.txHash ||
           });
         }
       }
