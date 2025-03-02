@@ -105,7 +105,7 @@ class CloudController {
         finalBalance,
         deductionCost: deploymentData.deductionCost,
         message: "Token deducted on deployment",
-        txHash: "", //substractUserBalance.txHash,
+        txHash: substractUserBalance?.txHash || "",
       });
 
       // console.log("substracting amount from contract wallet");
@@ -284,12 +284,12 @@ class CloudController {
 
           // 🛠️ Step 8: Deduct Initial Deployment Cost (If Needed)
           console.log(userAddress, formattedTokenAddress, remainingAmount);
-          const addUserBalance = await this.gpuBillingService.addUserBalance(
-            userAddress,
-            formattedTokenAddress,
-            remainingAmount
-          );
-          console.log("User Balance Deducted:", addUserBalance);
+          // const addUserBalance = await this.gpuBillingService.addUserBalance(
+          //   userAddress,
+          //   formattedTokenAddress,
+          //   remainingAmount
+          // );
+          // console.log("User Balance Deducted:", addUserBalance);
 
           // 🛠️ Step 7: Create Credit Transaction
           await this.transactionDAO.createTransaction({
@@ -300,7 +300,7 @@ class CloudController {
             previousBalance,
             finalBalance,
             deductionCost: { refund: remainingAmount },
-            txHash: addUserBalance.txHash,
+            txHash: addUserBalance?.txHash || "",
           });
         }
       }
